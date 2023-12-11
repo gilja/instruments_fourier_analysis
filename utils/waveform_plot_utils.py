@@ -1,3 +1,25 @@
+"""
+waveform_plot_utils.py
+
+This module provides utility functions for working with waveform plots. It includes functions for
+plotting, saving, and interacting with waveform data.
+
+Public Functions:
+- plot_waveform: Create an interactive visualization interface to display and save waveform plots.
+
+Private Functions:
+- _get_plot_names: Extracts and cleans plot names from a list of file paths.
+- _prepare_checkbox_grid: Create a grid of checkboxes based on plot names.
+- _prepare_buttons: Prepare a set of buttons and a button container.
+- _toggle_all: Toggle all checkboxes on or off.
+- _prepare_subplots: Prepare two subplots for waveform plots.
+- _draw_unzoomed_waveforms: Draw zoomed-out waveform on the left subplot of a figure.
+- _draw_zoomed_waveforms: Draw zoomed-in waveform on the right subplot of a figure.
+- _update_plot: Update the layout of a Plotly figure for waveform plots.
+- _export_to_pdf: Export a Plotly figure to a PDF file.
+- _get_save_filenames: Generate PDF filenames for saving waveform plots using the name of subplots.
+"""
+
 import ipywidgets as widgets
 import math
 from IPython.display import display, clear_output
@@ -168,7 +190,7 @@ def _prepare_subplots(plot_names, selected_indices, n_rows, name=None):
 
 def _draw_unzoomed_waveforms(fig, sounds, row, idx):
     """
-    Draw zoomed out waveform on the left subplot of a figure.
+    Draw zoomed-out waveform on the left subplot of a figure.
 
     This function adds the full waveform plot to the specified row of a left subplot.
     It extracts the sound data and sample rate from the `sounds` list, generates time
