@@ -4,7 +4,7 @@ from IPython.display import Audio, display
 from ipywidgets import Layout
 
 
-def loadSound(filename):
+def load_sound(filename):
     """
     Load and normalize a WAV audio file.
 
@@ -48,7 +48,7 @@ def loadSound(filename):
     return data, sample_rate
 
 
-def playAudio(files, n_columns=3):
+def play_audio(files, n_columns=3):
     """
     Display audio players for a list of audio files within a Jupyter notebook.
 
