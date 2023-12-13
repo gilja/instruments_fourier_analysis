@@ -91,7 +91,10 @@ def play_audio(files, n_columns=3):
 
         # Create a label for the file name, centered
         label = widgets.Label(
-            value=name.replace(".WAV", "").replace("_", " ").replace("-", " "),
+            value=name.replace(".WAV", "")
+            .replace("_", " ")
+            .replace("-", " ")
+            .replace(" 16 bit", ""),
             layout=Layout(
                 width="100%", display="flex", justify_content="center"
             ),  # note: type: ignore

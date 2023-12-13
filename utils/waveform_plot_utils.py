@@ -162,6 +162,9 @@ def _prepare_subplots(plot_names, selected_indices, n_rows, name=None):
 
     Returns:
         plotly.graph_objs.Figure: A Plotly figure object.
+
+    Note: Vertical spacing between subplots has to be adjusted based on the number of
+          rows. Otherwise, the spacing will diverge as the number of rows increases.
     """
 
     if not name:  # scenario: all plots together
@@ -173,7 +176,7 @@ def _prepare_subplots(plot_names, selected_indices, n_rows, name=None):
             cols=2,
             subplot_titles=subplot_titles,
             horizontal_spacing=cfg.HSPACING,
-            vertical_spacing=cfg.VSPACING,
+            vertical_spacing=cfg.VSPACING / n_rows,
         )
     else:  # scenario: plots individually
         fig = make_subplots(
