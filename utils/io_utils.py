@@ -2,6 +2,10 @@ from scipy.io import wavfile
 import ipywidgets as widgets
 from IPython.display import Audio, display
 from ipywidgets import Layout
+import numpy as np
+import os
+from settings import period_bounds as pb
+from settings import config as cfg
 
 
 def load_sound(filename):
@@ -125,3 +129,53 @@ def play_audio(files, n_columns=3):
     # Arrange all rows vertically
     vbox = widgets.VBox(rows)
     display(vbox)
+
+
+def export_and_store_one_period_audio(files, one_period_signals, sample_rates):
+    """
+    Export as WAV file and store in an array one-period audio signals.
+
+    This function takes a list of input filenames, one-period audio signals,
+    and their corresponding sample rates. It exports and stores each
+    one-period audio signal as a WAV file, 1-second long in the
+    'one_period_audio' directory within the results folder. It also returns
+    the one-period audio signals as an array.
+
+    Args:
+        files (list): List of input filenames. Full paths to the files are expected.
+        one_period_signals (list): List of one-period audio signals stored as NumPy arrays.
+                                   This list is created using extract_periods_and_data_rates()
+                                   function from utils/fourier_math_utils.py.
+        sample_rates (list): List of sample rates corresponding to the one-period signals.
+                             This list is created using extract_periods_and_data_rates()
+                             function from utils/fourier_math_utils.py.
+
+    Returns:
+        one_period_audios (list): List of one-period audio signals 1-second long.
+    """
+
+    one_period_audios = []
+    output_directory = os.path.join(cfg.PATH_RESULTS, "one_period_audio")
+
+    for file, signal, sample_rate, period_bound in zip(
+        files, one_period_signals, sample_rates, pb.PERIOD_BOUNDS.values()
+    ):
+        name = (
+            file.split("/")[-1]
+            .replace(".WAV", "")
+            .replace("-", "_")
+            .replace("_16_bit", "")
+        )
+
+        duration = period_bound[1] - period_bound[0]
+        # extend the signal to 1 second long to be audible
+        one_period_audio_data = np.tile(signal, int(1 / duration))
+
+        one_period_audios.append(one_period_audio_data)
+        wavfile.write(
+            f"{output_directory}/{name}",
+            sample_rate,
+            one_period_audio_data,
+        )
+
+    return one_period_audios
