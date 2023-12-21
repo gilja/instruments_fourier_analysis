@@ -27,9 +27,10 @@ from plotly.subplots import make_subplots
 import numpy as np
 import plotly.graph_objs as go
 import plotly.io as pio
-from settings import config as cfg
 import os
 from functools import partial
+from settings import period_bounds as pb
+from settings import config as cfg
 
 
 def _get_plot_names(files):
@@ -230,14 +231,18 @@ def _draw_unzoomed_waveforms(fig, sounds, row, idx):
     fig.update_xaxes(title_text="t [ms]", row=row, col=1)
 
 
-def _draw_zoomed_waveforms(fig, sounds, zoom_percentages, row, idx):
+def _draw_zoomed_waveforms(
+    fig, sounds, zoom_percentages, row, idx, mark_one_period=False
+):
     """
-    Draw zoomed-in waveform on the right subplot of a figure.
+    Draw zoomed-in waveform on the right subplot of a figure. Optionally, draw two
+    vertical lines for marking the start and end of the period.
 
     This function adds a zoomed-in waveform plot to the specified row of a right subplot.
     It extracts the sound data and sample rate from the `sounds` list, generates time
     data for the x-axis in milliseconds, calculates the zoomed portion indices, and plots
-    the zoomed waveform.
+    the zoomed waveform. If the `mark_one_period` list is set to True, the function also
+    draws two vertical lines for marking the start and end of one period.
 
     Args:
         fig (plotly.graph_objs.Figure): The Plotly figure to draw on.
@@ -245,6 +250,8 @@ def _draw_zoomed_waveforms(fig, sounds, zoom_percentages, row, idx):
         zoom_percentages (list): List of zoom percentages for the sounds.
         row (int): The row number of the subplot to draw on.
         idx (int): The index of the selected sound in the `sounds` list.
+        mark_one_period (bool, optional): Whether to mark one period on the zoomed-in
+                                          waveform plots (default is False).
 
     Returns:
         None
@@ -275,6 +282,39 @@ def _draw_zoomed_waveforms(fig, sounds, zoom_percentages, row, idx):
 
     # update x-axis labels
     fig.update_xaxes(title_text="t [ms]", row=row, col=2)
+
+    # adding vertical lines for marking the start and end of the period
+    if mark_one_period is True:
+        bounds_list = list(pb.PERIOD_BOUNDS.values())
+        x1, x2 = bounds_list[idx]  # bounds are in seconds, converted to ms below
+
+        plot_x_min = time_in_milliseconds[start_index]
+        plot_x_max = time_in_milliseconds[end_index]
+
+        if plot_x_max - plot_x_min < (x2 - x1) * 1000:
+            raise ValueError(
+                f"Plot not showing entire period. Change zoom percentage for index {idx}."
+            )
+
+        if x2 * 1000 > plot_x_max or x1 * 1000 < plot_x_min:
+            period = x2 - x1
+
+            while x2 * 1000 > plot_x_max or x1 * 1000 < plot_x_min:
+                x1 -= period
+                x2 -= period
+
+        fig.add_vline(
+            x=x1 * 1000,
+            line=dict(color="black", dash="dash", width=2),
+            row=row,
+            col=2,
+        )
+        fig.add_vline(
+            x=x2 * 1000,
+            line=dict(color="black", dash="dash", width=2),
+            row=row,
+            col=2,
+        )
 
 
 def _update_plot(fig, n_rows):
@@ -350,7 +390,7 @@ def _get_save_filenames(files):
     return filenames
 
 
-def plot_waveform(sounds, zoom_percentages, files):
+def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
     """
     Draw and save waveform plots based on user selections.
 
@@ -362,6 +402,8 @@ def plot_waveform(sounds, zoom_percentages, files):
         sounds (list): List of sound data and sample rates.
         zoom_percentages (list): List of zoom percentages for each waveform.
         files (list): List of input filenames.
+        mark_one_period (bool, optional): Whether to mark one period on the zoomed-in
+                                          waveform plots (default is False).
 
     Returns:
         None
@@ -396,7 +438,16 @@ def plot_waveform(sounds, zoom_percentages, files):
 
         for i, idx in enumerate(selected_indices):
             _draw_unzoomed_waveforms(fig, sounds, row=i + 1, idx=idx)
-            _draw_zoomed_waveforms(fig, sounds, zoom_percentages, row=i + 1, idx=idx)
+            if mark_one_period is True:
+                _draw_zoomed_waveforms(
+                    fig,
+                    sounds,
+                    zoom_percentages,
+                    row=i + 1,
+                    idx=idx,
+                    mark_one_period=mark_one_period,
+                )
+            # _draw_zoomed_waveforms(fig, sounds, zoom_percentages, row=i + 1, idx=idx)
 
         _update_plot(fig, n_rows=len(selected_indices))
         fig.show()

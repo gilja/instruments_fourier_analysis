@@ -12,7 +12,7 @@ __all__ = [
 PATH_BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PATH_DATA = PATH_BASE + "/data/"
 PATH_RESULTS = PATH_BASE + "/results/analysed/"
-PATH_INSTRUMENT_SAMPLES = PATH_DATA + "/instrument_samples/"
+PATH_INSTRUMENT_SAMPLES = PATH_DATA + "instrument_samples/"
 
 # Set figure size for all plots
 FIGURE_WIDTH = 1600  # width for the whole figure
