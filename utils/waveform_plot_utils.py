@@ -447,7 +447,10 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
                     idx=idx,
                     mark_one_period=mark_one_period,
                 )
-            # _draw_zoomed_waveforms(fig, sounds, zoom_percentages, row=i + 1, idx=idx)
+            else:
+                _draw_zoomed_waveforms(
+                    fig, sounds, zoom_percentages, row=i + 1, idx=idx
+                )
 
         _update_plot(fig, n_rows=len(selected_indices))
         fig.show()

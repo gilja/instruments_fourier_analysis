@@ -21,3 +21,45 @@ FIGURE_HEIGHT_PER_PLOT = 400  # height for each individual plot
 # Set horizontal and vertical spacing between subplots
 HSPACING = 0.08
 VSPACING = 0.2
+
+# Set waveform zoom percentage for each instrument
+WAVEFORM_ZOOM_PERCENTAGES = [
+    0.008,
+    0.0015,
+    0.01,
+    0.005,
+    0.003,
+    0.009,
+    0.009,
+    0.004,
+    0.002,
+    0.003,
+    0.011,
+    0.002,
+    0.007,
+    0.007,
+    0.009,
+    0.003,
+    0.003,
+]
+
+# Set the number of harmonics to be used in the Fourier analysis for each instrument
+N_HARMONICS_PER_INSTRUMENT = [
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+]

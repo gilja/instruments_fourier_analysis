@@ -133,7 +133,7 @@ def play_audio(files, n_columns=3):
 
 def export_and_store_one_period_audio(files, one_period_signals, sample_rates):
     """
-    Export as WAV file and store in an array one-period audio signals.
+    Export audio as WAV file and store in an array one-period audio signals.
 
     This function takes a list of input filenames, one-period audio signals,
     and their corresponding sample rates. It exports and stores each
