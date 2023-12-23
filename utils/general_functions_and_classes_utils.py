@@ -1,7 +1,7 @@
 """
-general_functions_utils.py
+general_functions_and_classes_utils.py
 
-This module contains general utility functions used in the project.
+This module contains general utility functions and classes used in the project.
 
 Public functions:
 - prepare_checkbox_grid: Create a grid of checkboxes based on provided names.
@@ -55,3 +55,49 @@ def toggle_all(checkboxes, _):
     new_value = not checkboxes[0].value
     for cb in checkboxes:
         cb.value = new_value
+
+
+class ButtonPanel:
+    """
+    Base class for creating a panel of buttons.
+
+    This class creates a horizontal container (HBox) with a set of buttons.
+    Subclasses are expected to specify the button descriptions they require.
+
+    Methods:
+        get_buttons: Returns a list of button widgets.
+        get_container: Returns the HBox container holding the buttons.
+    """
+
+    def __init__(self, button_descriptions):
+        """
+        Initializes the ButtonPanel with the specified button descriptions.
+
+        Args:
+            button_descriptions (list of str): Descriptions for each button to be created.
+        """
+
+        self.buttons = [
+            widgets.Button(description=desc) for desc in button_descriptions
+        ]
+        self.button_container = widgets.HBox(self.buttons)
+
+    def get_buttons(self):
+        """
+        Returns the list of button widgets.
+
+        Returns:
+            list: A list of widgets.Button instances.
+        """
+
+        return self.buttons
+
+    def get_container(self):
+        """
+        Returns the HBox container holding the button widgets.
+
+        Returns:
+            widgets.HBox: The container with the buttons.
+        """
+
+        return self.button_container

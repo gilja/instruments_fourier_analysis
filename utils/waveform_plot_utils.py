@@ -30,7 +30,7 @@ import os
 from functools import partial
 from settings import period_bounds as pb
 from settings import config as cfg
-from utils import general_functions_utils as gfu
+from utils import general_functions_and_classes_utils as gfcu
 
 
 def _get_plot_names(files):
@@ -57,38 +57,18 @@ def _get_plot_names(files):
     return plot_names
 
 
-def _prepare_buttons():
+class _PrepareButtonsWaveformsPlot(gfcu.ButtonPanel):
     """
-    Prepare a set of buttons and a button container.
-
-    The function creates "draw", "Toggle All", "Save All", and "Save Individual"
-    buttons. The buttons are then placed in a horizontal container at the bottom
-    of the window.
-
-    Returns:
-        tuple: A tuple containing the individual buttons and a container holding them.
+    Subclass of a ButtonPanel class used for creating a panel with "Draw",
+    "Toggle All", "Save All", and "Save Individual" buttons. Used in
+    plot_waveform function.
     """
 
-    draw_button = widgets.Button(description="Draw")
-    toggle_all_button = widgets.Button(description="Toggle All")
-    save_all_button = widgets.Button(description="Save All")
-    save_individual_button = widgets.Button(description="Save Individual")
-    button_container = widgets.HBox(
-        [
-            draw_button,
-            toggle_all_button,
-            save_all_button,
-            save_individual_button,
-        ]
-    )
-
-    return (
-        draw_button,
-        toggle_all_button,
-        save_all_button,
-        save_individual_button,
-        button_container,
-    )
+    def __init__(self):
+        """
+        Initializes _PrepareButtonsWaveformsPlot with predefined buttons.
+        """
+        super().__init__(["Draw", "Toggle All", "Save All", "Save Individual"])
 
 
 def _prepare_subplots(plot_names, selected_indices, n_rows, name=None):
@@ -361,16 +341,19 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
 
     plot_names = _get_plot_names(files)
 
-    checkboxes, checkbox_layout = gfu.prepare_checkbox_grid(plot_names)
+    checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(plot_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
 
+    # prepare buttons
+    # Prepare buttons
+    buttons_panel = _PrepareButtonsWaveformsPlot()
     (
         draw_button,
         toggle_all_button,
         save_all_button,
         save_individual_button,
-        button_container,
-    ) = _prepare_buttons()
+    ) = buttons_panel.get_buttons()
+    button_container = buttons_panel.get_container()
 
     display(checkbox_grid, button_container)
 
@@ -407,7 +390,7 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
 
     draw_button.on_click(_draw_plot)
 
-    toggle_all_button.on_click(partial(gfu.toggle_all, checkboxes))
+    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
 
     def _save_all_plots(_):
         selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]

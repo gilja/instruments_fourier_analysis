@@ -1,7 +1,7 @@
 import ipywidgets as widgets
 from IPython.display import display, clear_output
 from functools import partial
-from utils import general_functions_utils as gfu
+from utils import general_functions_and_classes_utils as gfcu
 from settings import period_bounds as pb
 
 
@@ -57,18 +57,31 @@ def _prepare_buttons():
     )
 
 
+class _PrepareButtonsMathematicalRepresentation(gfcu.ButtonPanel):
+    """
+    Subclass of a ButtonPanel class used for creating a panel with "Display Function"
+    and "Toggle All" buttons. Used for displaying mathematical representations of
+    signals through Fourier series.
+    """
+
+    def __init__(self):
+        """
+        Initializes _PrepareButtonsMathematicalRepresentation with predefined buttons.
+        """
+        super().__init__(["Display Function", "Toggle All"])
+
+
 def print_mathematical_representation_of_signal(
     files, mathematical_representation_of_signal_per_instrument
 ):
     audio_file_names = _get_audiofile_names(files)
-    checkboxes, checkbox_layout = gfu.prepare_checkbox_grid(audio_file_names)
+    checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(audio_file_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
 
-    (
-        display_function_button,
-        toggle_all_button,
-        button_container,
-    ) = _prepare_buttons()
+    # Prepare buttons
+    buttons_panel = _PrepareButtonsMathematicalRepresentation()
+    display_function_button, toggle_all_button = buttons_panel.get_buttons()
+    button_container = buttons_panel.get_container()
 
     display(checkbox_grid, button_container)
 
@@ -91,4 +104,4 @@ def print_mathematical_representation_of_signal(
 
     display_function_button.on_click(_display_function)
 
-    toggle_all_button.on_click(partial(gfu.toggle_all, checkboxes))
+    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
