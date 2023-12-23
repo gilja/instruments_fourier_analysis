@@ -21,7 +21,6 @@ Private Functions:
 """
 
 import ipywidgets as widgets
-import math
 from IPython.display import display, clear_output
 from plotly.subplots import make_subplots
 import numpy as np
@@ -31,13 +30,14 @@ import os
 from functools import partial
 from settings import period_bounds as pb
 from settings import config as cfg
+from utils import general_functions_utils as gfu
 
 
 def _get_plot_names(files):
     """
     Extracts and cleans plot names from a list of file paths.
 
-    Function expects that files are of the WAC format and that the file names
+    Function expects that files are of the WAV format and that the file names
     contain .WAV extension. The function removes the extension and replaces
     underscores and dashes with spaces. The function also removes the "16 bit"
     string from the plot names.
@@ -50,43 +50,11 @@ def _get_plot_names(files):
     """
 
     plot_names = [
-        name.split("/")[-1]
-        .replace(".WAV", "")
-        .replace("_", " ")
-        .replace("-", " ")
-        .replace("16 bit", "")
-        .lower()
+        name.split("/")[-1].replace("-", "_").replace("_16_bit.wav", "")
         for name in files
     ]
 
     return plot_names
-
-
-def _prepare_checkbox_grid(plot_names):
-    """
-    Create a grid of checkboxes based on plot names.
-
-    The function creates a grid of checkboxes based on the provided plot names.
-    In each column, there are two checkboxes. The number of columns is determined
-    by the number of plot names.
-
-    Args:
-        plot_names (list of str): A list of plot names.
-
-    Returns:
-        tuple: A tuple containing the list of checkboxes and the layout for the grid.
-    """
-
-    checkboxes = [widgets.Checkbox(value=True, description=name) for name in plot_names]
-    n_columns = math.ceil(len(checkboxes) / 2)
-
-    checkbox_layout = widgets.Layout(
-        grid_template_columns="repeat(%d, 300px)" % n_columns,
-        grid_gap="1px",
-        align_items="flex-start",
-    )
-
-    return checkboxes, checkbox_layout
 
 
 def _prepare_buttons():
@@ -121,24 +89,6 @@ def _prepare_buttons():
         save_individual_button,
         button_container,
     )
-
-
-def _toggle_all(checkboxes, _):
-    """
-    Toggle all checkboxes on or off.
-
-    Args:
-        checkboxes (list): A list of Checkbox widgets.
-        _ (object): A placeholder argument (ignored).
-
-    Note:
-        This function updates the state of all checkboxes to match the state of the first checkbox.
-
-    """
-
-    new_value = not checkboxes[0].value
-    for cb in checkboxes:
-        cb.value = new_value
 
 
 def _prepare_subplots(plot_names, selected_indices, n_rows, name=None):
@@ -411,7 +361,7 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
 
     plot_names = _get_plot_names(files)
 
-    checkboxes, checkbox_layout = _prepare_checkbox_grid(plot_names)
+    checkboxes, checkbox_layout = gfu.prepare_checkbox_grid(plot_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
 
     (
@@ -457,7 +407,7 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
 
     draw_button.on_click(_draw_plot)
 
-    toggle_all_button.on_click(partial(_toggle_all, checkboxes))
+    toggle_all_button.on_click(partial(gfu.toggle_all, checkboxes))
 
     def _save_all_plots(_):
         selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
