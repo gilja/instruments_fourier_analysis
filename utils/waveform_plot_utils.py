@@ -235,15 +235,19 @@ def _draw_zoomed_waveforms(
 
         fig.add_vline(
             x=x1 * 1000,
-            line=dict(color="black", dash="dash", width=2),
             row=row,
             col=2,
+            line_color="black",
+            line_dash="dash",
+            line_width=2,
         )
         fig.add_vline(
             x=x2 * 1000,
-            line=dict(color="black", dash="dash", width=2),
             row=row,
             col=2,
+            line_color="black",
+            line_dash="dash",
+            line_width=2,
         )
 
 
@@ -345,7 +349,6 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
 
     # prepare buttons
-    # Prepare buttons
     buttons_panel = _PrepareButtonsWaveformsPlot()
     (
         draw_button,
