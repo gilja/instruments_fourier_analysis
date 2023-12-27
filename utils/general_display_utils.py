@@ -5,6 +5,7 @@ from functools import partial
 import numpy as np
 import os
 from scipy.io import wavfile
+import plotly.graph_objs as go
 from utils import general_functions_and_classes_utils as gfcu
 from settings import period_bounds as pb
 from settings import config as cfg
@@ -289,3 +290,195 @@ def display_reconstructed_and_original_audio(
             )
 
     save_selected_button.on_click(_save_selected_button)
+
+
+class _PrepareButtonsPowerSpectra(gfcu.ButtonPanel):
+    """
+    Subclass of a ButtonPanel class used for creating a panel with "Plot Joined",
+    "Plot Individual", "Toggle All", "Save Joined" and "Save Individual" buttons.
+    Used in draw_harmonics_power_spectra function.
+    """
+
+    def __init__(self):
+        """
+        Initializes _PrepareButtonsDisplayAudio with predefined buttons.
+        """
+        super().__init__(
+            [
+                "Plot Joined",
+                "Plot Individual",
+                "Toggle All",
+                "Save Joined",
+                "Save Individual",
+            ]
+        )
+
+
+def _draw_joined_plotter_function(
+    fig, selected_indices, relative_harmonic_powers_per_instrument, audio_file_names
+):
+    for idx in selected_indices:
+        relative_powers = relative_harmonic_powers_per_instrument[idx] * 100
+        harmonic_order = list(range(1, len(relative_powers) + 1))
+        fig.add_trace(
+            go.Bar(
+                x=harmonic_order,
+                y=relative_powers,
+                name=f"{audio_file_names[idx]}",
+            )
+        )
+        fig.update_layout(
+            title={
+                "text": "Harmonic Power Spectrum",
+                "x": 0.5,  # Set to 0.5 for center alignment horizontally
+            },
+            xaxis_title="Order of harmonic",
+            yaxis_title="Relative Power",
+        )
+
+
+def _daw_individual_plotter_function(
+    idx, relative_harmonic_powers_per_instrument, audio_file_names
+):
+    relative_powers = relative_harmonic_powers_per_instrument[idx] * 100
+    harmonic_order = list(range(1, len(relative_powers) + 1))
+
+    # Create a new figure for each selected checkbox
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=harmonic_order,
+            y=relative_powers,
+            name=f"Harmonic power spectrum for {audio_file_names[idx]}",
+        )
+    )
+    fig.update_layout(
+        title={
+            "text": f"Harmonic Power Spectrum for {audio_file_names[idx]}",
+            "x": 0.5,  # Set to 0.5 for center alignment horizontally
+        },
+        xaxis_title="Order of harmonic",
+        yaxis_title="Relative Power",
+    )
+
+    return fig
+
+
+def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument):
+    audio_file_names = _get_audiofile_names(files)
+    checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(audio_file_names)
+    checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
+
+    # Prepare buttons
+    buttons_panel = _PrepareButtonsPowerSpectra()
+    (
+        plot_joined_button,
+        plot_individual_button,
+        toggle_all_button,
+        save_joined_button,
+        save_individual_button,
+    ) = buttons_panel.get_buttons()
+    button_container = buttons_panel.get_container()
+
+    display(checkbox_grid, button_container)
+
+    def _draw_joined(_):
+        clear_output(wait=True)  # unique output
+        display(checkbox_grid, button_container)  # unique output
+
+        selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
+        if not selected_indices:
+            return
+
+        fig = go.Figure()
+
+        _draw_joined_plotter_function(
+            fig,
+            selected_indices,
+            relative_harmonic_powers_per_instrument,
+            audio_file_names,
+        )
+
+        fig.show()
+
+    plot_joined_button.on_click(_draw_joined)
+
+    def _draw_individual(_):
+        clear_output(wait=True)  # unique output
+        display(checkbox_grid, button_container)  # unique output
+
+        selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
+        if not selected_indices:
+            return
+
+        for idx in selected_indices:
+            fig = _daw_individual_plotter_function(
+                idx,
+                relative_harmonic_powers_per_instrument,
+                audio_file_names,
+            )
+
+            fig.show()
+
+    plot_individual_button.on_click(_draw_individual)
+
+    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
+
+    def _save_joined(_):
+        selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
+        if not selected_indices:
+            return
+
+        fig = go.Figure()
+
+        _draw_joined_plotter_function(
+            fig,
+            selected_indices,
+            relative_harmonic_powers_per_instrument,
+            audio_file_names,
+        )
+
+        # Save the plot to PDF
+        name = ""
+        for idx in selected_indices:
+            name += f"{audio_file_names[idx]}_"
+        name = name[:-1]  # remove last underscore
+
+        pdf_path = os.path.join(cfg.PATH_RESULTS, "power_spectra/")
+        gfcu.export_to_pdf(
+            fig, n_rows=2, pdf_path=pdf_path + name + ".pdf"
+        )  # n_rows=2 to modify plot size
+
+        print(
+            f"Saved joined plot to .{pdf_path[len(cfg.PATH_BASE):]}"
+        )  # print relative path
+
+    save_joined_button.on_click(_save_joined)
+
+    def _save_individual(_):
+        clear_output(wait=True)  # unique output
+        display(checkbox_grid, button_container)  # unique output
+
+        selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
+        if not selected_indices:
+            return
+
+        for idx in selected_indices:
+            fig = _daw_individual_plotter_function(
+                idx,
+                relative_harmonic_powers_per_instrument,
+                audio_file_names,
+            )
+
+            # Save the plot to PDF
+            name = audio_file_names[idx]
+            pdf_path = os.path.join(cfg.PATH_RESULTS, "power_spectra/")
+            gfcu.export_to_pdf(
+                fig, n_rows=2, pdf_path=pdf_path + name + ".pdf"
+            )  # n_rows=2 to modify plot size
+
+            print(
+                f"Saved individual plot to .{pdf_path[len(cfg.PATH_BASE):]}"
+            )  # print relative path
+
+    save_individual_button.on_click(_save_individual)

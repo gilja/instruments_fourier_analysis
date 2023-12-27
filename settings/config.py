@@ -16,6 +16,7 @@ PATH_INSTRUMENT_SAMPLES = PATH_DATA + "instrument_samples/"
 
 # Set figure size for all plots
 FIGURE_WIDTH = 1600  # width for the whole figure
+FIGURE_HEIGHT = 800
 FIGURE_HEIGHT_PER_PLOT = 400  # height for each individual plot
 
 # Set horizontal and vertical spacing between subplots

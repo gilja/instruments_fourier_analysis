@@ -16,7 +16,6 @@ Private Functions:
 - _draw_unzoomed_waveforms: Draw zoomed-out waveform on the left subplot of a figure.
 - _draw_zoomed_waveforms: Draw zoomed-in waveform on the right subplot of a figure.
 - _update_plot: Update the layout of a Plotly figure for waveform plots.
-- _export_to_pdf: Export a Plotly figure to a PDF file.
 - _get_save_filenames: Generate PDF filenames for saving waveform plots using the name of subplots.
 """
 
@@ -412,7 +411,7 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
 
         # Save the plot to PDF
         pdf_path = os.path.join(cfg.PATH_RESULTS, "waveforms_all.pdf")
-        _export_to_pdf(fig, selected_indices, pdf_path)
+        gfcu.export_to_pdf(fig, selected_indices, pdf_path)
         print(f"Saved all plots to {pdf_path}")
 
     save_all_button.on_click(_save_all_plots)
@@ -435,7 +434,7 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
 
             # Save the plot to PDF
             pdf_path = os.path.join(cfg.PATH_RESULTS, f"waveform_{filenames[idx]}")
-            _export_to_pdf(fig, n_rows=1, pdf_path=pdf_path)
+            gfcu.export_to_pdf(fig, n_rows=1, pdf_path=pdf_path)
             print(f"Saved individual plot to {pdf_path}")
 
     save_individual_button.on_click(_save_individual_plots)

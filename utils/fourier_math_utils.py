@@ -94,7 +94,8 @@ def calculate_harmonic_power_spectrum(fourier_coefficients):
     This function takes a set of Fourier coefficients representing the harmonic components
     of a signal and calculates the relative power of each component. The relative
     power spectrum expresses the power of each harmonic as a fraction of the total signal
-    power.
+    power. The first harmonic is excluded from the calculation because it represents the
+    average value of the signal.
 
     Args:
         fourier_coefficients (numpy.ndarray): A 2D array containing Fourier coefficients
@@ -121,7 +122,7 @@ def calculate_harmonic_power_spectrum(fourier_coefficients):
     # rounding to 4 decimal places
     relative_harmonic_powers = np.round(relative_harmonic_powers, 4)
 
-    return relative_harmonic_powers
+    return relative_harmonic_powers[1:]
 
 
 def reconstruct_original_signal(one_period_signal, fourier_coefficients):

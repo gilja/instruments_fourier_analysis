@@ -6,10 +6,13 @@ This module contains general utility functions and classes used in the project.
 Public functions:
 - prepare_checkbox_grid: Create a grid of checkboxes based on provided names.
 - toggle_all: Toggle all checkboxes on or off.
+- export_to_pdf: Export a Plotly figure to a PDF file.
 """
 
 import ipywidgets as widgets
 import math
+import plotly.io as pio
+from settings import config as cfg
 
 
 def prepare_checkbox_grid(names):
@@ -101,3 +104,30 @@ class ButtonPanel:
         """
 
         return self.button_container
+
+
+def export_to_pdf(fig, n_rows, pdf_path):
+    """
+    Export a Plotly figure to a PDF file.
+
+    This function exports the specified Plotly figure to a PDF file at the specified
+    path. It customizes the height of the exported PDF based on the number of rows
+    for waveform plots. Both the height and the width of the exported PDF are defined
+    in the config file.
+
+    Args:
+        fig (plotly.graph_objs.Figure): The Plotly figure to export.
+        n_rows (int): The number of rows for waveform plots.
+        pdf_path (str): The file path where the PDF will be saved.
+
+    Returns:
+        None
+    """
+
+    pio.write_image(
+        fig,
+        pdf_path,
+        format="pdf",
+        height=cfg.FIGURE_HEIGHT_PER_PLOT * n_rows,
+        width=cfg.FIGURE_WIDTH,
+    )
