@@ -6,6 +6,8 @@ import numpy as np
 import os
 from scipy.io import wavfile
 import plotly.graph_objs as go
+import re
+import sympy
 from utils import general_functions_and_classes_utils as gfcu
 from settings import period_bounds as pb
 from settings import config as cfg
@@ -301,7 +303,7 @@ class _PrepareButtonsPowerSpectra(gfcu.ButtonPanel):
 
     def __init__(self):
         """
-        Initializes _PrepareButtonsDisplayAudio with predefined buttons.
+        Initializes _PrepareButtonsPowerSpectra with predefined buttons.
         """
         super().__init__(
             [
@@ -482,3 +484,224 @@ def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument)
             )  # print relative path
 
     save_individual_button.on_click(_save_individual)
+
+
+class _PrepareButtonsDrawIndividualHarmonics(gfcu.ButtonPanel):
+    """
+    Subclass of a ButtonPanel class used for creating a panel with "Toggle All" and
+    "Plot harmonics" buttos. Used in plot_individual_harmonics function.
+    """
+
+    def __init__(self):
+        """
+        Initializes _PrepareButtonsDrawIndividualHarmonics with predefined buttons.
+        """
+        super().__init__(
+            [
+                "Toggle All",
+                "Plot Harmonics",
+            ]
+        )
+
+
+def _get_individual_terms(mathematical_representation_of_signal):
+    """
+    Extract individual terms from a mathematical function representing the signal.
+
+    Args:
+        mathematical_representation_of_signal (str): A mathematical representation
+            of a signal.
+
+    Returns:
+        terms (list): A list of individual terms.
+    """
+
+    terms = re.findall(
+        r"[\+\-]?\s*\d+\.?\d*\*?[^+\-]+",
+        mathematical_representation_of_signal,
+    )
+    terms = [t.rstrip() for t in terms]
+
+    return terms
+
+
+def _get_grouped_terms(terms):
+    """
+    Group terms by their harmonic order.
+
+    Function groups the terms in the following way:
+
+    1. The first term in the list is the constant term and
+       is combined with the 2nd and the 3rd terms representing
+       the first harmonic.
+    2. The 4th and the 5th terms represent the second harmonic and
+       are combined together.
+    3. The 6th and the 7th terms represent the third harmonic and
+       are combined together.
+
+    The process is continued until all terms are grouped. The function
+    returns a list of grouped terms. The grouped_terms list will contain
+    three terms as the first element (constant and the first harmonic),
+    two terms as the second element (second harmonic), two terms as the
+    third element (third harmonic), etc.
+
+    Args:
+        terms (list): A list of individual terms.
+
+    Returns:
+        grouped_terms (list): A list of grouped terms.
+    """
+
+    grouped_terms = [terms[:3]]
+    grouped_terms.extend(
+        [terms[i : i + 2] for i in range(3, len(terms), 2)]  # noqa: E203
+    )
+
+    return grouped_terms
+
+
+def _get_null_points(grouped_terms):
+    """
+    Find null points of a function.
+
+    Function finds the null points of a sympy function. The null-points are
+    used to define the range of t values for which the function is plotted.
+    Only the null points of the first harmonic are used to define the range
+    since the first harmonic has the largest period by definition. By finding
+    the proper range for the first harmonic, the proper range for all other
+    harmonics is also defined.
+
+    Args:
+        grouped_terms (list): A list functions representing individual harmonics.
+                      Each element of the list is a string is a list of
+                      strings representing individual terms.
+
+    Returns:
+        null_points (list): A list of null points.
+    """
+
+    # Find the null points of the first harmonic. Other harmonics
+    #
+    term = "".join(grouped_terms[0])
+    # parse the function string using sympy
+    t = sympy.symbols("t")
+    f = sympy.sympify(term)
+
+    # Find the null points
+    null_points = sympy.solve(f, t)
+
+    # Convert null points to floats
+    null_points = [float(point) for point in null_points]
+
+    if len(null_points) < 2:
+        print("Warning: Not enough null points found. Using default range ([0, 20]).")
+        null_points = [0, 10]
+
+    return null_points
+
+
+def _get_numerical_values_from_term(term, t_min, t_max):
+    """
+    Function converts given term to numerical values for plotting. It returns a list
+    of numerical values for t and y axes. The function is used in plot_individual_harmonics.
+
+    Args:
+        term (list): A list of strings representing individual harmonics. If the term
+                     represents the first harmonic, the list will contain three strings
+                     (constant, sine term, and cosine term). If the term represents any other
+                     harmonic, the list will contain two strings (sine term and cosine term).
+        t_min (float): The minimum value of t for which the function is plotted.
+        t_max (float): The maximum value of t for which the function is plotted.
+
+
+    Returns:
+        t_values (list): A list of numerical values representing time coordinates.
+        y_values (list): A list of numerical values representing values of the function for
+                         each time coordinate.
+    """
+
+    # join the terms into a single string
+    term = "".join(term)
+    # parse the function string using sympy
+    t = sympy.symbols("t")
+    f = sympy.sympify(term)
+
+    # create a list of t values within the specified range
+    t_values = np.linspace(t_min, t_max, 1000)
+
+    # evaluate the function for each value of t
+    y_values = [float(f.evalf(subs={t: value})) for value in t_values]
+
+    return t_values, y_values
+
+
+def plot_individual_harmonics(
+    files, mathematical_representation_of_signal_per_instrument
+):
+    audio_file_names = _get_audiofile_names(files)
+    checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(audio_file_names)
+    checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
+
+    # Prepare buttons
+    buttons_panel = _PrepareButtonsDrawIndividualHarmonics()
+    (
+        toggle_all_button,
+        plot_harmonics_button,
+    ) = buttons_panel.get_buttons()
+    button_container = buttons_panel.get_container()
+
+    display(checkbox_grid, button_container)
+
+    def _plot_harmonics(_):
+        clear_output(wait=True)  # unique output
+        display(checkbox_grid, button_container)  # unique output
+
+        selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
+        if not selected_indices:
+            return
+
+        for idx in selected_indices:
+            fig = go.Figure()
+            terms = _get_individual_terms(
+                mathematical_representation_of_signal_per_instrument[idx]
+            )
+
+            grouped_terms = _get_grouped_terms(terms)
+
+            null_points = _get_null_points(grouped_terms)
+            # defining the range of the x-axis
+            t_min = null_points[0]
+            t_max = t_min + 2 * (null_points[1] - null_points[0])  # get 1 period
+
+            for n, term in enumerate(grouped_terms):
+                t_values, y_values = _get_numerical_values_from_term(term, t_min, t_max)
+
+                if n == 0:
+                    name = "Constant + 1st harmonic"
+                else:
+                    name = f"{n+1}th harmonic"
+                fig.add_trace(
+                    go.Scatter(
+                        x=t_values,
+                        y=y_values,
+                        mode="lines",  # Use "lines" mode for curves
+                        name=name,
+                        showlegend=True,  # To display the legend
+                    )
+                )
+
+            fig.update_layout(
+                title={
+                    "text": f"Harmonic content for {audio_file_names[idx]}",
+                    "x": 0.5,  # Set to 0.5 for center alignment horizontally
+                },
+                xaxis_title="t",
+                yaxis_title="y",
+                showlegend=True,  # To display the legend
+            )
+
+            fig.show()
+
+    plot_harmonics_button.on_click(_plot_harmonics)
+
+    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))

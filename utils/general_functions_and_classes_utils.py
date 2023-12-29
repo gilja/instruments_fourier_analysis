@@ -30,7 +30,7 @@ def prepare_checkbox_grid(names):
         tuple: A tuple containing the list of checkboxes and the layout for the grid.
     """
 
-    checkboxes = [widgets.Checkbox(value=True, description=name) for name in names]
+    checkboxes = [widgets.Checkbox(value=False, description=name) for name in names]
     n_columns = math.ceil(len(checkboxes) / 2)
 
     checkbox_layout = widgets.Layout(
