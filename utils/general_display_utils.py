@@ -339,11 +339,34 @@ def _draw_joined_plotter_function(
         )
 
 
+def _find_closest_note_name(frequency):
+    closest_note = min(cfg.NOTE_FREQUENCIES, key=lambda note: abs(note - frequency))
+    return cfg.NOTE_FREQUENCIES[closest_note]
+
+
 def _daw_individual_plotter_function(
     idx, relative_harmonic_powers_per_instrument, audio_file_names
 ):
     relative_powers = relative_harmonic_powers_per_instrument[idx] * 100
     harmonic_order = list(range(1, len(relative_powers) + 1))
+
+    # Calculate sound periods and frequencies for the fundamental frequency of each instrument
+    sound_periods = [end - start for start, end in pb.PERIOD_BOUNDS.values()]
+    sound_frequencies = [1 / period for period in sound_periods]
+
+    # Get the fundamental frequency for the current instrument
+    fundamental_frequency = sound_frequencies[idx]
+
+    # Calculate frequencies of each harmonic for the current instrument
+    frequencies = [fundamental_frequency * n for n in harmonic_order]
+    # Find the closest note name for each frequency
+    note_labels = [_find_closest_note_name(freq) for freq in frequencies]
+
+    # Pair the frequency and note label for each bar
+    custom_label = [
+        {"frequency": f"{freq:.2f} Hz", "note": note}
+        for freq, note in zip(frequencies, note_labels)
+    ]
 
     # Create a new figure for each selected checkbox
     fig = go.Figure()
@@ -352,8 +375,17 @@ def _daw_individual_plotter_function(
             x=harmonic_order,
             y=relative_powers,
             name=f"Harmonic power spectrum for {audio_file_names[idx]}",
+            text=note_labels,
+            customdata=custom_label,
+            hovertemplate=(
+                "Harmonic Order: %{x}<br>"
+                "Relative Power: %{y:.2f}%<br>"
+                "Frequency: %{customdata.frequency}<br>"
+                "Note: %{customdata.note}<extra></extra>"
+            ),
         )
     )
+
     fig.update_layout(
         title={
             "text": f"Harmonic Power Spectrum for {audio_file_names[idx]}",
@@ -488,8 +520,9 @@ def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument)
 
 class _PrepareButtonsDrawIndividualHarmonics(gfcu.ButtonPanel):
     """
-    Subclass of a ButtonPanel class used for creating a panel with "Toggle All" and
-    "Plot harmonics" buttos. Used in plot_individual_harmonics function.
+    Subclass of a ButtonPanel class used for creating a panel with "Toggle All",
+    "Plot harmonics", "Save Joined" and "Save Individual" buttos. Used in
+    plot_individual_harmonics function.
     """
 
     def __init__(self):
@@ -500,6 +533,8 @@ class _PrepareButtonsDrawIndividualHarmonics(gfcu.ButtonPanel):
             [
                 "Toggle All",
                 "Plot Harmonics",
+                "Save Joined",
+                "Save Individual",
             ]
         )
 
@@ -635,6 +670,55 @@ def _get_numerical_values_from_term(term, t_min, t_max):
     return t_values, y_values
 
 
+def _add_harmonic_to_plot(fig, t_values, y_values, name):
+    fig.add_trace(
+        go.Scatter(
+            x=t_values,
+            y=y_values,
+            mode="lines",  # Use "lines" mode for curves
+            name=name,
+            showlegend=True,  # To display the legend
+        )
+    )
+
+
+def _update_plot_layout(fig, title, legend=True, y_range=None):
+    layout = {
+        "title": {"text": title, "x": 0.5},  # Title settings
+        "xaxis_title": "t",  # X-axis title
+        "showlegend": legend,  # To display the legend
+    }
+
+    if y_range is not None:
+        layout["yaxis"] = {"range": y_range}  # Y-axis range
+
+    fig.update_layout(layout)
+
+
+def _get_y_axis_range(grouped_terms, t_min, t_max):
+    """
+    Function calculates the maximum value of y for all harmonics. It is used in
+    plot_individual_harmonics in order to set the same y-axis range for all plots
+    when button "Save Individual" is clicked.
+
+    Args:
+        grouped_terms (list): A list functions representing individual harmonics.
+                      Each element of the list is a string is a list of
+                      strings representing individual terms.
+        t_min (float): The minimum value of t for which the function is plotted.
+        t_max (float): The maximum value of t for which the function is plotted.
+
+    Returns:
+        max_y_value (float): The maximum value of y for all harmonics plus a margin.
+    """
+    max_y_per_harmonic = []
+    for term in grouped_terms:
+        _, y_values = _get_numerical_values_from_term(term, t_min, t_max)
+        max_y_per_harmonic.append(max(y_values))
+
+    return max(max_y_per_harmonic) * cfg.Y_AXIS_MARGIN
+
+
 def plot_individual_harmonics(
     files, mathematical_representation_of_signal_per_instrument
 ):
@@ -647,12 +731,16 @@ def plot_individual_harmonics(
     (
         toggle_all_button,
         plot_harmonics_button,
+        save_joined_button,
+        save_individual_button,
     ) = buttons_panel.get_buttons()
     button_container = buttons_panel.get_container()
 
     display(checkbox_grid, button_container)
 
-    def _plot_harmonics(_):
+    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
+
+    def _plot_harmonics(_, save=False):
         clear_output(wait=True)  # unique output
         display(checkbox_grid, button_container)  # unique output
 
@@ -661,7 +749,63 @@ def plot_individual_harmonics(
             return
 
         for idx in selected_indices:
+            print("Preparing the plot. Please wait...")
+
             fig = go.Figure()
+            terms = _get_individual_terms(
+                mathematical_representation_of_signal_per_instrument[idx]
+            )
+
+            grouped_terms = _get_grouped_terms(terms)
+
+            # defining the range of the x-axis
+            null_points = _get_null_points(grouped_terms)
+            t_min = null_points[0]
+            t_max = t_min + 2 * (null_points[1] - null_points[0])  # get 1 period
+
+            for n, term in enumerate(grouped_terms):
+                t_values, y_values = _get_numerical_values_from_term(term, t_min, t_max)
+
+                if n == 0:
+                    name = "Constant + 1st harmonic"
+                else:
+                    name = f"{n+1}th harmonic"
+
+                _add_harmonic_to_plot(fig, t_values, y_values, name)
+
+            title = f"Harmonic content for {audio_file_names[idx]}"
+            _update_plot_layout(fig, title)
+
+            if not save:
+                fig.show()
+
+            if save:
+                # Save the plot to PDF
+                name = audio_file_names[idx]
+
+                pdf_path = os.path.join(cfg.PATH_RESULTS, "harmonics/")
+                gfcu.export_to_pdf(
+                    fig, n_rows=2, pdf_path=pdf_path + name + ".pdf"
+                )  # n_rows=2 to modify plot size
+
+                print(
+                    f"Saved joined plot to .{pdf_path[len(cfg.PATH_BASE):]}"
+                )  # print relative path
+
+    plot_harmonics_button.on_click(_plot_harmonics)
+
+    save_joined_button.on_click(partial(_plot_harmonics, save=True))
+
+    def _save_individual(_):
+        clear_output(wait=True)  # unique output
+        display(checkbox_grid, button_container)  # unique output
+
+        selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
+        if not selected_indices:
+            return
+
+        for idx in selected_indices:
+            print("Preparing plots. Please wait...")
             terms = _get_individual_terms(
                 mathematical_representation_of_signal_per_instrument[idx]
             )
@@ -673,35 +817,35 @@ def plot_individual_harmonics(
             t_min = null_points[0]
             t_max = t_min + 2 * (null_points[1] - null_points[0])  # get 1 period
 
+            # max y value for all plots
+            max_y_value = _get_y_axis_range(grouped_terms, t_min, t_max)
+
             for n, term in enumerate(grouped_terms):
+                fig = go.Figure()
                 t_values, y_values = _get_numerical_values_from_term(term, t_min, t_max)
 
                 if n == 0:
                     name = "Constant + 1st harmonic"
                 else:
                     name = f"{n+1}th harmonic"
-                fig.add_trace(
-                    go.Scatter(
-                        x=t_values,
-                        y=y_values,
-                        mode="lines",  # Use "lines" mode for curves
-                        name=name,
-                        showlegend=True,  # To display the legend
-                    )
-                )
 
-            fig.update_layout(
-                title={
-                    "text": f"Harmonic content for {audio_file_names[idx]}",
-                    "x": 0.5,  # Set to 0.5 for center alignment horizontally
-                },
-                xaxis_title="t",
-                yaxis_title="y",
-                showlegend=True,  # To display the legend
-            )
+                _add_harmonic_to_plot(fig, t_values, y_values, name)
 
-            fig.show()
+                title = f"{name} for {audio_file_names[idx]}"
+                y_range = [-max_y_value, max_y_value]
 
-    plot_harmonics_button.on_click(_plot_harmonics)
+                _update_plot_layout(fig, title, legend=False, y_range=y_range)
 
-    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
+                # Save the plot to PDF
+                name = f"{audio_file_names[idx]}_{str(n + 1)}th_harmonic"
+
+                pdf_path = os.path.join(cfg.PATH_RESULTS, "harmonics/")
+                gfcu.export_to_pdf(
+                    fig, n_rows=2, pdf_path=pdf_path + name + ".pdf"
+                )  # n_rows=2 to modify plot size
+
+                print(
+                    f"Saved joined plot to .{pdf_path[len(cfg.PATH_BASE):]}"
+                )  # print relative path
+
+    save_individual_button.on_click(_save_individual)
