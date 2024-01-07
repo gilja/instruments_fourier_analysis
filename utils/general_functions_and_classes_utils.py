@@ -72,16 +72,19 @@ class ButtonPanel:
         get_container: Returns the HBox container holding the buttons.
     """
 
-    def __init__(self, button_descriptions):
+    def __init__(self, button_descriptions, button_width="auto"):
         """
         Initializes the ButtonPanel with the specified button descriptions.
 
         Args:
             button_descriptions (list of str): Descriptions for each button to be created.
+            button_width (str, optional): The width of the buttons (CSS width value).
         """
 
+        button_layout = widgets.Layout(width=button_width)
         self.buttons = [
-            widgets.Button(description=desc) for desc in button_descriptions
+            widgets.Button(description=desc, layout=button_layout)
+            for desc in button_descriptions
         ]
         self.button_container = widgets.HBox(self.buttons)
 

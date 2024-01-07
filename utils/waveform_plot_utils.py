@@ -24,12 +24,12 @@ from IPython.display import display, clear_output
 from plotly.subplots import make_subplots
 import numpy as np
 import plotly.graph_objs as go
-import plotly.io as pio
 import os
 from functools import partial
 from settings import period_bounds as pb
 from settings import config as cfg
 from utils import general_functions_and_classes_utils as gfcu
+from utils import fourier_math_utils as fmu
 
 
 def _get_plot_names(files):
@@ -274,33 +274,6 @@ def _update_plot(fig, n_rows):
     )
 
 
-def _export_to_pdf(fig, n_rows, pdf_path):
-    """
-    Export a Plotly figure to a PDF file.
-
-    This function exports the specified Plotly figure to a PDF file at the specified
-    path. It customizes the height of the exported PDF based on the number of rows
-    for waveform plots. Both the height and the width of the exported PDF are defined
-    in the config file.
-
-    Args:
-        fig (plotly.graph_objs.Figure): The Plotly figure to export.
-        n_rows (int): The number of rows for waveform plots.
-        pdf_path (str): The file path where the PDF will be saved.
-
-    Returns:
-        None
-    """
-
-    pio.write_image(
-        fig,
-        pdf_path,
-        format="pdf",
-        height=cfg.FIGURE_HEIGHT_PER_PLOT * n_rows,
-        width=cfg.FIGURE_WIDTH,
-    )
-
-
 def _get_save_filenames(files):
     """
     Generate PDF filenames for saving waveform plots using the name of subplots.
@@ -438,3 +411,207 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
             print(f"Saved individual plot to {pdf_path}")
 
     save_individual_button.on_click(_save_individual_plots)
+
+
+class _PrepareButtonsReconstructionTimeline(gfcu.ButtonPanel):
+    """
+    Subclass of a ButtonPanel class used for creating a panel with "Toggle All",
+    "Reconstruct Waveform" and "Save Individual Plots" buttons. Used in
+    draw_waveform_reconstruction_timeline function.
+    """
+
+    def __init__(self):
+        """
+        Initializes _PrepareButtonsReconstructionTimeline with predefined buttons.
+        """
+        super().__init__(
+            [
+                "Toggle All",
+                "Reconstruct Waveform",
+                "Save Individual Plots",
+            ]
+        )
+
+
+def _update_plot_layout(fig, title, rows, legend=False):
+    # Update the figure layout directly
+    fig.update_layout(
+        title={"text": title, "x": 0.5},  # Title settings
+        showlegend=legend,  # To display the legend
+        height=cfg.FIGURE_HEIGHT_PER_PLOT
+        * rows,  # Set the height based on the number of rows
+    )
+
+
+def _add_harmonic_to_plot(
+    fig,
+    one_period_signal,
+    sample_rates,
+    n,
+    idx,
+    saving_individual=False,
+):
+    fourier_coefficients = fmu.calculate_fourier_coefficients(one_period_signal, n)
+    reconstructed_signal = fmu.reconstruct_original_signal(
+        one_period_signal, fourier_coefficients
+    )
+
+    # Generate time data for the x-axis in milliseconds
+    time_in_seconds = np.arange(0, len(one_period_signal)) / sample_rates[idx]
+    time_in_milliseconds = time_in_seconds * 1000
+
+    # Determine the row and column for the current plot
+    if saving_individual:
+        row = 1
+        col = 1
+    else:
+        row = (n // 2) + 1
+        col = 1 if n % 2 == 0 else 2
+
+    fig.add_trace(
+        go.Scatter(
+            x=time_in_milliseconds,
+            y=one_period_signal,
+            mode="lines",
+            name="Original Signal",
+            line=dict(color="red"),
+        ),
+        row=row,
+        col=col,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=time_in_milliseconds,
+            y=reconstructed_signal,
+            mode="lines",
+            name="Reconstructed Signal",
+            line=dict(color="blue"),
+        ),
+        row=row,
+        col=col,
+    )
+
+    # Set x-axis title for each subplot
+    fig.update_xaxes(title_text="t [ms]", row=row, col=col)
+
+
+def draw_waveform_reconstruction_timeline(files, one_period_signals, sample_rates):
+    """
+    Draw the evolution of the waveform reconstruction for a selected instrument.
+
+    This function allows the user to select one instrument at a time and generates
+    a grid of plots showing how the reconstructed waveform approaches the original
+    waveform as more harmonics are added. The instrument selection is done using
+    checkboxes. Function enables user to also save individual each step of the
+    reconstruction.
+
+    Args:
+        files (list): A list of file names.
+        one_period_signals (list): A list of one-period audio signals.
+        sample_rates (list): A list of sample rates corresponding to each audio signal.
+
+    Returns:
+        None
+    """
+
+    plot_names = _get_plot_names(files)
+
+    checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(plot_names)
+    checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
+
+    # prepare buttons
+    buttons_panel = _PrepareButtonsReconstructionTimeline()
+    (
+        toggle_all_button,
+        reconstruct_waveform_button,
+        save_individual_plots_button,
+    ) = buttons_panel.get_buttons()
+    button_container = buttons_panel.get_container()
+
+    display(checkbox_grid, button_container)
+
+    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
+
+    def _reconstruct_waveform(_):
+        clear_output(wait=True)  # unique output
+        display(checkbox_grid, button_container)  # unique output
+
+        selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
+        if not selected_indices:
+            return
+
+        if len(selected_indices) > 1:
+            print("Please select only one instrument.")
+            return
+
+        # Get the index of the selected instrument
+        idx = selected_indices[0]
+
+        # Get the one-period audio signal for the selected instrument
+        one_period_signal = one_period_signals[idx]
+        n_harmonics = cfg.N_HARMONICS_PER_INSTRUMENT[idx]
+
+        # Calculate the number of rows needed for the subplot
+        rows = (n_harmonics + 1) // 2 if n_harmonics % 2 == 1 else n_harmonics // 2
+
+        # Generate subplot titles
+        subplot_titles = [f"All prior + {n}. harmonic" for n in range(n_harmonics)]
+        subplot_titles[0] = "Average term"
+        subplot_titles[1] = "Average term + 1. harmonic"
+
+        # Create subplot figure with 2 columns and the calculated number of rows
+        fig = make_subplots(rows=rows, cols=2, subplot_titles=subplot_titles)
+
+        for n in range(n_harmonics):
+            _add_harmonic_to_plot(fig, one_period_signal, sample_rates, n, idx)
+
+        title = f"Reconstruction evolution for {plot_names[idx]}"
+        _update_plot_layout(fig, title, rows, legend=False)
+        fig.show()
+
+    reconstruct_waveform_button.on_click(_reconstruct_waveform)
+
+    def _save_individual_plots(_):
+        selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
+        if not selected_indices:
+            return
+
+        for idx in selected_indices:
+            # Get the one-period audio signal for the selected instrument
+            one_period_signal = one_period_signals[idx]
+            n_harmonics = cfg.N_HARMONICS_PER_INSTRUMENT[idx]
+
+            # Generate subplot titles
+            subplot_titles = [f"All prior + {n}. harmonic" for n in range(n_harmonics)]
+            subplot_titles[0] = "Average term"
+            subplot_titles[1] = "Average term + 1. harmonic"
+
+            for n in range(n_harmonics):
+                # create a figure with one row and one column (one plot)
+                fig = make_subplots(
+                    rows=1, cols=1, subplot_titles=""
+                )  # only one row. subplot used for consistency instead of go.Figure()
+
+                _add_harmonic_to_plot(
+                    fig, one_period_signal, sample_rates, n, idx, saving_individual=True
+                )
+
+                title = f"{subplot_titles[n]} for {plot_names[idx]}"
+                _update_plot_layout(fig, title=title, rows=1, legend=True)
+
+                # Save the plot to PDF
+                name = plot_names[idx]
+
+                pdf_path = os.path.join(cfg.PATH_RESULTS, "waveform_reconstruction/")
+                gfcu.export_to_pdf(
+                    fig,
+                    n_rows=2,
+                    pdf_path=pdf_path + name + f"_step_{n+1}.pdf",
+                )  # n_rows=2 only here to modify plot size
+
+                print(
+                    f"Saved joined plot to .{pdf_path[len(cfg.PATH_BASE):]}"
+                )  # print relative path
+
+    save_individual_plots_button.on_click(_save_individual_plots)

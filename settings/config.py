@@ -1,18 +1,11 @@
 import os
 
-# Define the list of variables and functions to be imported
-__all__ = [
-    "PATH_BASE",
-    "PATH_DATA",
-    "PATH_RESULTS",
-    "PATH_INSTRUMENT_SAMPLES",
-]
-
 # Path constants
 PATH_BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PATH_DATA = PATH_BASE + "/data/"
-PATH_RESULTS = PATH_BASE + "/results/analysed/"
-PATH_INSTRUMENT_SAMPLES = PATH_DATA + "instrument_samples/"
+PATH_DATA = os.path.join(PATH_BASE, "data")
+PATH_RESULTS = os.path.join(PATH_BASE, "results", "analysed")
+PATH_INSTRUMENT_SAMPLES = os.path.join(PATH_DATA, "instrument_samples")
+
 
 # Set figure size for all plots
 FIGURE_WIDTH = 1600  # width for the whole figure
@@ -46,23 +39,23 @@ WAVEFORM_ZOOM_PERCENTAGES = [
 
 # Set the number of harmonics to be used in the Fourier analysis for each instrument
 N_HARMONICS_PER_INSTRUMENT = [
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
-    10,
+    50,  # cello
+    10,  # clarinet
+    45,  # double bass
+    20,  # female vocal
+    10,  # flute
+    20,  # nylon string guitar
+    15,  # oboe
+    25,  # piano
+    10,  # piccolo flute
+    10,  # sax alto
+    80,  # sax baritone
+    10,  # sax soprano
+    25,  # sax tenor
+    30,  # steel string guitar
+    20,  # trombone
+    15,  # trumpet
+    20,  # violin
 ]
 
 # Set the y-axis range margin when exporting individual hamornics to PDF
@@ -178,4 +171,5 @@ NOTE_FREQUENCIES = {
     7040.00: "A8",
     7458.62: "A#8/Bb8",
     7902.13: "B8",
+    8000.00: "",  # no note names above B8
 }

@@ -179,3 +179,7 @@ def export_and_store_one_period_audio(files, one_period_signals, sample_rates):
         )
 
     return one_period_audios
+
+
+def play_individual_harmonics():
+    pass
