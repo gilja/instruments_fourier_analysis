@@ -8,7 +8,6 @@ Public Functions:
 - plot_waveform: Create an interactive visualization interface to display and save waveform plots.
 
 Private Functions:
-- _get_plot_names: Extracts and cleans plot names from a list of file paths.
 - _prepare_checkbox_grid: Create a grid of checkboxes based on plot names.
 - _prepare_buttons: Prepare a set of buttons and a button container.
 - _toggle_all: Toggle all checkboxes on or off.
@@ -30,30 +29,6 @@ from settings import period_bounds as pb
 from settings import config as cfg
 from utils import general_functions_and_classes_utils as gfcu
 from utils import fourier_math_utils as fmu
-
-
-def _get_plot_names(files):
-    """
-    Extracts and cleans plot names from a list of file paths.
-
-    Function expects that files are of the WAV format and that the file names
-    contain .WAV extension. The function removes the extension and replaces
-    underscores and dashes with spaces. The function also removes the "16 bit"
-    string from the plot names.
-
-    Args:
-        files (list of str): A list of file paths.
-
-    Returns:
-        list of str: A list of cleaned plot names extracted from the file paths.
-    """
-
-    plot_names = [
-        name.split("/")[-1].replace("-", "_").replace("_16_bit.wav", "")
-        for name in files
-    ]
-
-    return plot_names
 
 
 class _PrepareButtonsWaveformsPlot(gfcu.ButtonPanel):
@@ -289,8 +264,10 @@ def _get_save_filenames(files):
         list: List of generated PDF filenames.
     """
 
+    # TODO: check if this function can be ommited since I already have get_names() function
+
     filenames = [
-        name.strip().replace(" ", "_") + ".pdf" for name in _get_plot_names(files)
+        name.strip().replace(" ", "_") + ".pdf" for name in gfcu.get_names(files)
     ]
 
     return filenames
@@ -315,7 +292,7 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
         None
     """
 
-    plot_names = _get_plot_names(files)
+    plot_names = gfcu.get_names(files)
 
     checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(plot_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
@@ -515,7 +492,7 @@ def draw_waveform_reconstruction_timeline(files, one_period_signals, sample_rate
         None
     """
 
-    plot_names = _get_plot_names(files)
+    plot_names = gfcu.get_names(files)
 
     checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(plot_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)

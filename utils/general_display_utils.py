@@ -6,36 +6,10 @@ import numpy as np
 import os
 from scipy.io import wavfile
 import plotly.graph_objs as go
-import re
 import sympy
 from utils import general_functions_and_classes_utils as gfcu
 from settings import period_bounds as pb
 from settings import config as cfg
-
-
-def _get_audiofile_names(files):
-    """
-    Extracts and cleans audio file names from a list of file paths.
-
-    Function expects that files are of the WAV format and that the file names
-    contain .WAV extension. The function removes the extension and replaces
-    underscores and dashes with spaces. The function also removes the "16 bit"
-    string from the plot names.
-
-    Args:
-        files (list of str): A list of file paths.
-
-    Returns:
-        audio_file_names (list of str): A list of cleaned audio file names
-                                        extracted from the file paths.
-    """
-
-    audio_file_names = [
-        name.split("/")[-1].replace("-", "_").replace("_16_bit.wav", "")
-        for name in files
-    ]
-
-    return audio_file_names
 
 
 class _PrepareButtonsMathematicalRepresentation(gfcu.ButtonPanel):
@@ -73,7 +47,7 @@ def print_mathematical_representation_of_signal(
         None
     """
 
-    audio_file_names = _get_audiofile_names(files)
+    audio_file_names = gfcu.get_names(files)
     checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(audio_file_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
 
@@ -221,7 +195,7 @@ def display_reconstructed_and_original_audio(
         None
     """
 
-    audio_file_names = _get_audiofile_names(files)
+    audio_file_names = gfcu.get_names(files)
     checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(audio_file_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
 
@@ -399,7 +373,7 @@ def _daw_individual_plotter_function(
 
 
 def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument):
-    audio_file_names = _get_audiofile_names(files)
+    audio_file_names = gfcu.get_names(files)
     checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(audio_file_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
 
@@ -539,62 +513,6 @@ class _PrepareButtonsDrawIndividualHarmonics(gfcu.ButtonPanel):
         )
 
 
-def _get_individual_terms(mathematical_representation_of_signal):
-    """
-    Extract individual terms from a mathematical function representing the signal.
-
-    Args:
-        mathematical_representation_of_signal (str): A mathematical representation
-            of a signal.
-
-    Returns:
-        terms (list): A list of individual terms.
-    """
-
-    terms = re.findall(
-        r"[\+\-]?\s*\d+\.?\d*\*?[^+\-]+",
-        mathematical_representation_of_signal,
-    )
-    terms = [t.rstrip() for t in terms]
-
-    return terms
-
-
-def _get_grouped_terms(terms):
-    """
-    Group terms by their harmonic order.
-
-    Function groups the terms in the following way:
-
-    1. The first term in the list is the constant term and
-       is combined with the 2nd and the 3rd terms representing
-       the first harmonic.
-    2. The 4th and the 5th terms represent the second harmonic and
-       are combined together.
-    3. The 6th and the 7th terms represent the third harmonic and
-       are combined together.
-
-    The process is continued until all terms are grouped. The function
-    returns a list of grouped terms. The grouped_terms list will contain
-    three terms as the first element (constant and the first harmonic),
-    two terms as the second element (second harmonic), two terms as the
-    third element (third harmonic), etc.
-
-    Args:
-        terms (list): A list of individual terms.
-
-    Returns:
-        grouped_terms (list): A list of grouped terms.
-    """
-
-    grouped_terms = [terms[:3]]
-    grouped_terms.extend(
-        [terms[i : i + 2] for i in range(3, len(terms), 2)]  # noqa: E203
-    )
-
-    return grouped_terms
-
-
 def _get_null_points(grouped_terms):
     """
     Find null points of a function.
@@ -722,7 +640,7 @@ def _get_y_axis_range(grouped_terms, t_min, t_max):
 def plot_individual_harmonics(
     files, mathematical_representation_of_signal_per_instrument
 ):
-    audio_file_names = _get_audiofile_names(files)
+    audio_file_names = gfcu.get_names(files)
     checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(audio_file_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
 
@@ -752,11 +670,11 @@ def plot_individual_harmonics(
             print("Preparing the plot. Please wait...")
 
             fig = go.Figure()
-            terms = _get_individual_terms(
+            terms = gfcu.get_individual_terms(
                 mathematical_representation_of_signal_per_instrument[idx]
             )
 
-            grouped_terms = _get_grouped_terms(terms)
+            grouped_terms = gfcu.get_grouped_terms(terms)
 
             # defining the range of the x-axis
             null_points = _get_null_points(grouped_terms)
@@ -806,11 +724,11 @@ def plot_individual_harmonics(
 
         for idx in selected_indices:
             print("Preparing plots. Please wait...")
-            terms = _get_individual_terms(
+            terms = gfcu.get_individual_terms(
                 mathematical_representation_of_signal_per_instrument[idx]
             )
 
-            grouped_terms = _get_grouped_terms(terms)
+            grouped_terms = gfcu.get_grouped_terms(terms)
 
             null_points = _get_null_points(grouped_terms)
             # defining the range of the x-axis

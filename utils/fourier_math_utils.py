@@ -94,7 +94,7 @@ def calculate_harmonic_power_spectrum(fourier_coefficients):
     This function takes a set of Fourier coefficients representing the harmonic components
     of a signal and calculates the relative power of each component. The relative
     power spectrum expresses the power of each harmonic as a fraction of the total signal
-    power. The first harmonic is excluded from the calculation because it represents the
+    power. The first term is excluded from the calculation because it represents the
     average value of the signal.
 
     Args:

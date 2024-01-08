@@ -173,3 +173,7 @@ NOTE_FREQUENCIES = {
     7902.13: "B8",
     8000.00: "",  # no note names above B8
 }
+
+# set the duration and sample rate for individual harmonic audio files
+AUDIO_DURATION = 1.5  # seconds
+SAMPLE_RATE = 44100  # Hz
