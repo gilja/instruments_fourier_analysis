@@ -62,7 +62,7 @@ FIGURE_HEIGHT_PER_PLOT = 400  # height for each individual plot
 HSPACING = 0.08
 VSPACING = 0.2
 
-# Set the y-axis range margin when exporting individual hamornics to PDF
+# Set the y-axis range margin when exporting individual harmonics to PDF
 Y_AXIS_MARGIN = 1.05  # margin for the y-axis range
 
 # Set waveform zoom percentage for each instrument

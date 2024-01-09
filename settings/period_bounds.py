@@ -23,7 +23,6 @@ as follows:
 }
 """
 
-
 PERIOD_BOUNDS = {
     "cello": [0.8284, 0.83604],
     "clarinet": [2.09145, 2.09334],

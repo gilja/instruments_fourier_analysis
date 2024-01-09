@@ -64,7 +64,7 @@ def prepare_checkbox_grid(names):
     n_columns = math.ceil(len(checkboxes) / 2)
 
     checkbox_layout = widgets.Layout(
-        grid_template_columns="repeat(%d, 300px)" % n_columns,
+        grid_template_columns=f"repeat({n_columns}, 300px)",
         grid_gap="1px",
         align_items="flex-start",
     )

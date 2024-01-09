@@ -52,13 +52,13 @@ as follows:
 }
 """
 
+import os
+from functools import partial
 import ipywidgets as widgets
 from IPython.display import display, clear_output
 from plotly.subplots import make_subplots
 import numpy as np
 import plotly.graph_objs as go
-import os
-from functools import partial
 from settings import period_bounds as pb
 from settings import config as cfg
 from utils import general_functions_and_classes_utils as gfcu

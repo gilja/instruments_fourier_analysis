@@ -233,7 +233,8 @@ def get_mathematical_representation_of_signal(fourier_coefficients, T):
         if n == 0:
             representation += f"{a/2:.3f}\n"
         else:
-            representation += f" + {a:.3f}*cos(2*pi*{n}*t/{T:.3f}) + {b:.3f}*sin(2*pi*{n}*t/{T:.3f})\n"
+            representation += f" + {a:.3f}*cos(2*pi*{n}*t/{T:.3f}) \
+                + {b:.3f}*sin(2*pi*{n}*t/{T:.3f})\n"
 
     # Polishing the output
     representation = representation.replace(" + -", " - ")
