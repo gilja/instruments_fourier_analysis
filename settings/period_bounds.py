@@ -1,10 +1,26 @@
 """
-period_bounds.py
+period_bounds
+=============
 
-This configuration file provides the period bounds for each instrument used
-in the Fourier analysis. The bounds were obtained manually
-by plotting the Fourier transform of each audio file and identifying the
-periods visually.
+This configuration file provides the period bounds for each instrument used in
+the Fourier analysis. The bounds were obtained manually by plotting waveform of
+each audio file and identifying the periods visually.
+
+Notes:
+------
+
+Author: Duje Giljanović (giljanovic.duje@gmail.com)
+License: MIT License
+
+If you use this module in your research or any other publication, please acknowledge it by citing
+as follows:
+
+@software{instruments_fourier_analysis,
+    title = {Fourier Analysis of Musical Instruments},
+    author = {Duje Giljanović},
+    year = {2024},
+    url = {github.com/gilja/instruments_fourier_analysis},
+}
 """
 
 

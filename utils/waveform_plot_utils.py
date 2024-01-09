@@ -1,21 +1,55 @@
 """
-waveform_plot_utils.py
+waveform_plot_utils:
+====================
 
-This module provides utility functions for working with waveform plots. It includes functions for
-plotting, saving, and interacting with waveform data.
+The module contains utility functions for plotting and saving audio waveforms. It provides a simple
+GUI that allows one to select an audio file(s) to analyze.
 
 Public Functions:
-- plot_waveform: Create an interactive visualization interface to display and save waveform plots.
+-----------------
+
+-   plot_waveform: Draws and saves waveform plots based on user selections.
+-   draw_waveform_reconstruction_timeline: Draws the evolution of the waveform reconstruction for
+    the selected audio file.
 
 Private Functions:
-- _prepare_checkbox_grid: Create a grid of checkboxes based on plot names.
-- _prepare_buttons: Prepare a set of buttons and a button container.
-- _toggle_all: Toggle all checkboxes on or off.
-- _prepare_subplots: Prepare two subplots for waveform plots.
-- _draw_unzoomed_waveforms: Draw zoomed-out waveform on the left subplot of a figure.
-- _draw_zoomed_waveforms: Draw zoomed-in waveform on the right subplot of a figure.
-- _update_plot: Update the layout of a Plotly figure for waveform plots.
-- _get_save_filenames: Generate PDF filenames for saving waveform plots using the name of subplots.
+------------------
+
+-   _prepare_subplots: Prepares the subplots for plotting audio waveforms. Used in plot_waveform.
+-   _draw_unzoomed_waveforms: Draws a full audio waveform on the left subplot of a figure. Used in
+    plot_waveform.
+-   _draw_zoomed_waveforms: Draws a zoomed-in waveform on the right subplot of a figure. Used in
+    plot_waveform.
+-   _update_plot: Updates the layout of a Plotly figure. Used in plot_waveform.
+-   _add_harmonic_to_plot: Adds a single harmonic to the plot. Used in
+    draw_waveform_reconstruction_timeline.
+
+Classes:
+--------
+-   _PrepareButtonsWaveformsPlot:
+        *   A subclass of the ButtonPanel class defined in general_functions_and_classes_utils.
+        *   Used in plot_waveform function.
+-   _PrepareButtonsReconstructionTimeline:
+        *   A subclass of the ButtonPanel class defined in general_functions_and_classes_utils.
+        *   Used in draw_waveform_reconstruction_timeline function.
+
+For more information on the functions and classes, refer to their docstrings.
+
+Notes:
+------
+
+Author: Duje Giljanović (giljanovic.duje@gmail.com)
+License: MIT License
+
+If you use this module in your research or any other publication, please acknowledge it by citing
+as follows:
+
+@software{instruments_fourier_analysis,
+    title = {Fourier Analysis of Musical Instruments},
+    author = {Duje Giljanović},
+    year = {2024},
+    url = {github.com/gilja/instruments_fourier_analysis},
+}
 """
 
 import ipywidgets as widgets
@@ -33,21 +67,27 @@ from utils import fourier_math_utils as fmu
 
 class _PrepareButtonsWaveformsPlot(gfcu.ButtonPanel):
     """
-    Subclass of a ButtonPanel class used for creating a panel with "Draw",
-    "Toggle All", "Save All", and "Save Individual" buttons. Used in
-    plot_waveform function.
+    A subclass of the ButtonPanel class used for creating a panel with "Toggle All",
+    "Draw", "Save All", and "Save Individual" buttons. Used in plot_waveform function.
     """
 
     def __init__(self):
         """
         Initializes _PrepareButtonsWaveformsPlot with predefined buttons.
         """
-        super().__init__(["Draw", "Toggle All", "Save All", "Save Individual"])
+        super().__init__(
+            [
+                "Toggle All",
+                "Plot Waveforms",
+                "Save Selected Together",
+                "Save Selected Individually",
+            ]
+        )
 
 
 def _prepare_subplots(plot_names, selected_indices, n_rows, name=None):
     """
-    Prepare two subplots for waveform plots.
+    Prepares the subplots for plotting audio waveforms.
 
     The function prepares two subplots for each loaded sound. The left subplot
     contains the entire waveform, while the right subplot contains a zoomed-in
@@ -56,20 +96,26 @@ def _prepare_subplots(plot_names, selected_indices, n_rows, name=None):
     two-column figure for a single sound.
 
     Args:
-        plot_names (list): List of plot names.
-        selected_indices (list): List of selected indices.
-        n_rows (int): Number of rows for subplots.
-        name (str, optional): The name for individual plot titles (default is None).
-                              If the name is not provided, the function creates the
-                              single figure with all plots together. If the name is
-                              provided, the function creates a figure with only one
-                              current plot.
+        plot_names (list):
+            -   Plot names.
 
-    Returns:
-        plotly.graph_objs.Figure: A Plotly figure object.
+        selected_indices (list):
+            -   Selected indices.
 
-    Note: Vertical spacing between subplots has to be adjusted based on the number of
-          rows. Otherwise, the spacing will diverge as the number of rows increases.
+        n_rows (int):
+            -   Number of rows for subplots.
+
+        name (str, optional):
+            -   The name for individual plot titles (default is None). If the
+                name is not provided, the function creates a single figure
+                with all plots together. If the name is provided, the function
+                creates a figure with only one current plot.
+
+    Returns: plotly.graph_objs.Figure: A Plotly figure object.
+
+    Note:
+        Vertical spacing between subplots has to be adjusted based on the number of
+        rows. Otherwise, the spacing will diverge as the number of rows increases.
     """
 
     if not name:  # scenario: all plots together
@@ -98,17 +144,24 @@ def _prepare_subplots(plot_names, selected_indices, n_rows, name=None):
 
 def _draw_unzoomed_waveforms(fig, sounds, row, idx):
     """
-    Draw zoomed-out waveform on the left subplot of a figure.
+    Draws a full audio waveform on the left subplot of a figure.
 
-    This function adds the full waveform plot to the specified row of a left subplot.
+    The function adds the full waveform plot to the specified row of a left subplot.
     It extracts the sound data and sample rate from the `sounds` list, generates time
     data for the x-axis in milliseconds, and plots the waveform.
 
     Args:
-        fig (plotly.graph_objs.Figure): The Plotly figure to draw on.
-        sounds (list): List of sound data and sample rates.
-        row (int): The row number of the subplot to draw on.
-        idx (int): The index of the selected sound in the `sounds` list.
+        fig (plotly.graph_objs.Figure):
+            -   The Plotly figure to draw on.
+
+        sounds (list):
+            -   Sound data and sample rates.
+
+        row (int):
+            -   The row number of the subplot to draw on.
+
+        idx (int):
+            -   The index of the selected sound in the `sounds` list.
 
     Returns:
         None
@@ -135,12 +188,10 @@ def _draw_unzoomed_waveforms(fig, sounds, row, idx):
     fig.update_xaxes(title_text="t [ms]", row=row, col=1)
 
 
-def _draw_zoomed_waveforms(
-    fig, sounds, zoom_percentages, row, idx, mark_one_period=False
-):
+def _draw_zoomed_waveforms(fig, sounds, row, idx, mark_one_period=False):
     """
-    Draw zoomed-in waveform on the right subplot of a figure. Optionally, draw two
-    vertical lines for marking the start and end of the period.
+    Draws a zoomed-in waveform on the right subplot of a figure. Optionally, draws two
+    vertical lines for marking the start and the end of one period.
 
     This function adds a zoomed-in waveform plot to the specified row of a right subplot.
     It extracts the sound data and sample rate from the `sounds` list, generates time
@@ -149,20 +200,28 @@ def _draw_zoomed_waveforms(
     draws two vertical lines for marking the start and end of one period.
 
     Args:
-        fig (plotly.graph_objs.Figure): The Plotly figure to draw on.
-        sounds (list): List of sound data and sample rates.
-        zoom_percentages (list): List of zoom percentages for the sounds.
-        row (int): The row number of the subplot to draw on.
-        idx (int): The index of the selected sound in the `sounds` list.
-        mark_one_period (bool, optional): Whether to mark one period on the zoomed-in
-                                          waveform plots (default is False).
+        fig (plotly.graph_objs.Figure):
+            -   The Plotly figure to draw on.
+
+        sounds (list):
+            -   Sound data and sample rates.
+
+        row (int):
+            -   The row number of the subplot to draw on.
+
+        idx (int):
+            -   The index of the selected sound in the `sounds` list.
+
+        mark_one_period (bool, optional):
+            -   Whether to mark one period on the zoomed-in waveform
+                plots (default is False).
 
     Returns:
         None
     """
 
     wav, rate = sounds[idx]
-    zoom_percentage = zoom_percentages[idx]
+    zoom_percentage = cfg.WAVEFORM_ZOOM_PERCENTAGES[idx]
 
     # Generate time data for the x-axis in milliseconds
     time_in_seconds = np.arange(0, len(wav)) / rate
@@ -225,17 +284,26 @@ def _draw_zoomed_waveforms(
         )
 
 
-def _update_plot(fig, n_rows):
+def _update_plot(fig, title, n_rows, legend=False):
     """
-    Update the layout of a Plotly figure for waveform plots.
+    Updates the layout of a Plotly figure.
 
     This function updates the layout of the specified Plotly figure by adjusting the
     height, width, title, and title position to accommodate the given number of rows
     for waveform plots.
 
     Args:
-        fig (plotly.graph_objs.Figure): The Plotly figure to update.
-        n_rows (int): The number of rows for waveform plots.
+        fig (plotly.graph_objs.Figure):
+            -   The Plotly figure to update.
+
+        title (str):
+            -   The title of the figure.
+
+        n_rows (int):
+            -   The number of rows for waveform plots.
+
+        legend (bool, optional):
+            -   Whether to show the legend (default is False).
 
     Returns:
         None
@@ -243,50 +311,43 @@ def _update_plot(fig, n_rows):
 
     fig.update_layout(
         height=cfg.FIGURE_HEIGHT_PER_PLOT * n_rows,
-        width=cfg.FIGURE_WIDTH,
-        title_text="Waveform Plots",
+        title_text=title,
         title_x=0.5,
+        showlegend=legend,
     )
 
 
-def _get_save_filenames(files):
+def plot_waveform(sounds, files, mark_one_period=False):
     """
-    Generate PDF filenames for saving waveform plots using the name of subplots.
+    Draws and saves waveform plots based on user selections.
 
-    This function generates filenames for saving waveform plots as PDF files. It
-    takes a list of plot names, cleans them by replacing spaces with underscores,
-    and appends the ".pdf" file extension to each filename.
+    The function creates an interactive visualization interface to display and
+    save waveform plots. It takes a list of sound data and file names. Optionally,
+    the user can provide a mark_one_period parameter to mark one period on the
+    zoomed-in waveform plots.
+
+    Buttons:
+
+    -   Toggle All: Toggles all checkboxes.
+    -   Plot Waveforms: Draws the selected waveforms. The left subplot contains the full
+        waveform, while the right subplot contains a zoomed-in portion of the waveform.
+    -   Save Selected Together: Saves the selected waveforms together in a single PDF file.
+    -   Save Selected Individually: Saves the selected waveforms as separate PDF files.
 
     Args:
-        files (list): List of input filenames.
+        sounds (list):
+            -   Sound data and sample rates.
 
-    Returns:
-        list: List of generated PDF filenames.
-    """
+        zoom_percentages (list):
+            -   Zoom percentages for each waveform.
+                    *   This is defined in the config file.
 
-    # TODO: check if this function can be ommited since I already have get_names() function
+        files (list):
+            -   Input filenames.
 
-    filenames = [
-        name.strip().replace(" ", "_") + ".pdf" for name in gfcu.get_names(files)
-    ]
-
-    return filenames
-
-
-def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
-    """
-    Draw and save waveform plots based on user selections.
-
-    This function creates an interactive visualization interface to display and
-    save waveform plots. It takes a list of input filenames, sound data, and zoom
-    percentages. Users can select which waveforms to visualize and save.
-
-    Args:
-        sounds (list): List of sound data and sample rates.
-        zoom_percentages (list): List of zoom percentages for each waveform.
-        files (list): List of input filenames.
-        mark_one_period (bool, optional): Whether to mark one period on the zoomed-in
-                                          waveform plots (default is False).
+        mark_one_period (bool, optional):
+            -   Whether to mark one period on the zoomed-in waveform plots
+                (default is False).
 
     Returns:
         None
@@ -300,14 +361,16 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
     # prepare buttons
     buttons_panel = _PrepareButtonsWaveformsPlot()
     (
-        draw_button,
         toggle_all_button,
+        draw_button,
         save_all_button,
         save_individual_button,
     ) = buttons_panel.get_buttons()
     button_container = buttons_panel.get_container()
 
     display(checkbox_grid, button_container)
+
+    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
 
     def _draw_plot(_):
         clear_output(wait=True)  # unique output
@@ -327,24 +390,22 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
                 _draw_zoomed_waveforms(
                     fig,
                     sounds,
-                    zoom_percentages,
                     row=i + 1,
                     idx=idx,
                     mark_one_period=mark_one_period,
                 )
             else:
-                _draw_zoomed_waveforms(
-                    fig, sounds, zoom_percentages, row=i + 1, idx=idx
-                )
+                _draw_zoomed_waveforms(fig, sounds, row=i + 1, idx=idx)
 
-        _update_plot(fig, n_rows=len(selected_indices))
+        _update_plot(fig, title="Waveform Plots", n_rows=len(selected_indices))
         fig.show()
 
     draw_button.on_click(_draw_plot)
 
-    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
+    def _save_together_plots(_):
+        clear_output(wait=True)  # unique output
+        display(checkbox_grid, button_container)  # unique output
 
-    def _save_all_plots(_):
         selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
         if not selected_indices:
             return
@@ -355,44 +416,78 @@ def plot_waveform(sounds, zoom_percentages, files, mark_one_period=False):
 
         for i, idx in enumerate(selected_indices):
             _draw_unzoomed_waveforms(fig, sounds, row=i + 1, idx=idx)
-            _draw_zoomed_waveforms(fig, sounds, zoom_percentages, row=i + 1, idx=idx)
+            if mark_one_period is True:
+                _draw_zoomed_waveforms(
+                    fig,
+                    sounds,
+                    row=i + 1,
+                    idx=idx,
+                    mark_one_period=mark_one_period,
+                )
+            else:
+                _draw_zoomed_waveforms(fig, sounds, row=i + 1, idx=idx)
 
-        _update_plot(fig, n_rows=len(selected_indices))
+        _update_plot(fig, title="Waveform Plots", n_rows=len(selected_indices))
 
         # Save the plot to PDF
-        pdf_path = os.path.join(cfg.PATH_RESULTS, "waveforms_all.pdf")
-        gfcu.export_to_pdf(fig, selected_indices, pdf_path)
-        print(f"Saved all plots to {pdf_path}")
+        save_path = os.path.join(cfg.PATH_RESULTS, "original_waveforms/")
+        pdf_path = os.path.join(save_path, "waveforms_all.pdf")
+        gfcu.export_to_pdf(
+            fig,
+            n_rows=len(selected_indices),
+            pdf_path=pdf_path,
+        )
 
-    save_all_button.on_click(_save_all_plots)
+        print(
+            f"Saved joined plot to .{save_path[len(cfg.PATH_BASE):]}"
+        )  # print relative path
+
+    save_all_button.on_click(_save_together_plots)
 
     def _save_individual_plots(_):
+        clear_output(wait=True)  # unique output
+        display(checkbox_grid, button_container)  # unique output
+
         selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
         if not selected_indices:
             return
-
-        # Format the file name correctly
-        filenames = _get_save_filenames(files)
 
         for idx in selected_indices:
             fig = _prepare_subplots(
                 plot_names, selected_indices, n_rows=1, name=plot_names[idx]
             )
             _draw_unzoomed_waveforms(fig, sounds, row=1, idx=idx)
-            _draw_zoomed_waveforms(fig, sounds, zoom_percentages, row=1, idx=idx)
-            _update_plot(fig, n_rows=1)
+            if mark_one_period is True:
+                _draw_zoomed_waveforms(
+                    fig,
+                    sounds,
+                    row=1,
+                    idx=idx,
+                    mark_one_period=mark_one_period,
+                )
+            else:
+                _draw_zoomed_waveforms(fig, sounds, row=1, idx=idx)
+            _update_plot(fig, title="Waveform Plots", n_rows=1)
 
             # Save the plot to PDF
-            pdf_path = os.path.join(cfg.PATH_RESULTS, f"waveform_{filenames[idx]}")
-            gfcu.export_to_pdf(fig, n_rows=1, pdf_path=pdf_path)
-            print(f"Saved individual plot to {pdf_path}")
+            save_path = os.path.join(cfg.PATH_RESULTS, "original_waveforms/")
+            pdf_path = os.path.join(save_path, f"waveform_{plot_names[idx]}.pdf")
+            gfcu.export_to_pdf(
+                fig,
+                n_rows=1,
+                pdf_path=pdf_path,
+            )  # 2 just to modify the plot size
+
+            print(
+                f"Saved joined plot to .{save_path[len(cfg.PATH_BASE):]}"
+            )  # print relative path
 
     save_individual_button.on_click(_save_individual_plots)
 
 
 class _PrepareButtonsReconstructionTimeline(gfcu.ButtonPanel):
     """
-    Subclass of a ButtonPanel class used for creating a panel with "Toggle All",
+    A subclass of the ButtonPanel class used for creating a panel with "Toggle All",
     "Reconstruct Waveform" and "Save Individual Plots" buttons. Used in
     draw_waveform_reconstruction_timeline function.
     """
@@ -404,20 +499,10 @@ class _PrepareButtonsReconstructionTimeline(gfcu.ButtonPanel):
         super().__init__(
             [
                 "Toggle All",
-                "Reconstruct Waveform",
-                "Save Individual Plots",
+                "Show Reconstruction Timeline",
+                "Save Individual Steps",
             ]
         )
-
-
-def _update_plot_layout(fig, title, rows, legend=False):
-    # Update the figure layout directly
-    fig.update_layout(
-        title={"text": title, "x": 0.5},  # Title settings
-        showlegend=legend,  # To display the legend
-        height=cfg.FIGURE_HEIGHT_PER_PLOT
-        * rows,  # Set the height based on the number of rows
-    )
 
 
 def _add_harmonic_to_plot(
@@ -428,6 +513,35 @@ def _add_harmonic_to_plot(
     idx,
     saving_individual=False,
 ):
+    """
+    Adds a single harmonic to the plot.
+
+    This function calculates the Fourier coefficients for the specified harmonic
+    and reconstructs the original signal using the coefficients. It then adds the
+    original and reconstructed signals to the specified Plotly figure.
+
+    Args:
+        fig (plotly.graph_objs.Figure):
+            -   The Plotly figure to draw on.
+
+        one_period_signal (numpy.ndarray):
+            -   A one-period audio signal.
+
+        sample_rates (list):
+            -   Sample rates corresponding to each audio signal.
+
+        n (int):
+            -   The order of the harmonic.
+
+        idx (int):
+            -   The index of the selected instrument in the `sounds` list.
+
+        saving_individual (bool, optional):
+            -   Whether to save the individual plots (default is False).
+
+    Returns:
+        None
+    """
     fourier_coefficients = fmu.calculate_fourier_coefficients(one_period_signal, n)
     reconstructed_signal = fmu.reconstruct_original_signal(
         one_period_signal, fourier_coefficients
@@ -475,18 +589,31 @@ def _add_harmonic_to_plot(
 
 def draw_waveform_reconstruction_timeline(files, one_period_signals, sample_rates):
     """
-    Draw the evolution of the waveform reconstruction for a selected instrument.
+    Draws the evolution of the waveform reconstruction for a selected instrument.
 
-    This function allows the user to select one instrument at a time and generates
+    The function allows the user to select one instrument at a time and generates
     a grid of plots showing how the reconstructed waveform approaches the original
     waveform as more harmonics are added. The instrument selection is done using
-    checkboxes. Function enables user to also save individual each step of the
+    checkboxes. The function also enables the user to save individual each step of the
     reconstruction.
 
+    Buttons:
+
+    -   Toggle All: Toggles all checkboxes.
+    -   Show Reconstruction Timeline: Draws the evolution of the waveform reconstruction
+        for the selected instrument.
+    -   Save Individual Steps: Saves the individual steps of the waveform reconstruction
+        for the selected instrument as separate PDF files.
+
     Args:
-        files (list): A list of file names.
-        one_period_signals (list): A list of one-period audio signals.
-        sample_rates (list): A list of sample rates corresponding to each audio signal.
+        files (list):
+            -   File names.
+
+        one_period_signals (list):
+            -   1-period audio signals.
+
+        sample_rates (list):
+            -   Sample rates corresponding to each audio signal.
 
     Returns:
         None
@@ -544,12 +671,15 @@ def draw_waveform_reconstruction_timeline(files, one_period_signals, sample_rate
             _add_harmonic_to_plot(fig, one_period_signal, sample_rates, n, idx)
 
         title = f"Reconstruction evolution for {plot_names[idx]}"
-        _update_plot_layout(fig, title, rows, legend=False)
+        _update_plot(fig, title, n_rows=rows, legend=False)
         fig.show()
 
     reconstruct_waveform_button.on_click(_reconstruct_waveform)
 
     def _save_individual_plots(_):
+        clear_output(wait=True)  # unique output
+        display(checkbox_grid, button_container)  # unique output
+
         selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
         if not selected_indices:
             return
@@ -575,7 +705,7 @@ def draw_waveform_reconstruction_timeline(files, one_period_signals, sample_rate
                 )
 
                 title = f"{subplot_titles[n]} for {plot_names[idx]}"
-                _update_plot_layout(fig, title=title, rows=1, legend=True)
+                _update_plot(fig, title=title, n_rows=1, legend=True)
 
                 # Save the plot to PDF
                 name = plot_names[idx]

@@ -1,9 +1,79 @@
+"""
+general_display_utils:
+======================
+
+A module containing general display utility functions and classes used in the project.
+It provides a simple GUI that allows the user to select an audio file(s) and obtain insights
+such as a mathematical representation of the reconstructed signal, reconstructed audio,
+and the power spectra of harmonics present in the signal.
+
+Public functions:
+-----------------
+
+-   print_mathematical_representation_of_signal: Displays a mathematical representation
+    of the reconstructed audio signals for selected audio files.
+-   display_reconstructed_and_original_audio: Displays widgets for playing original and
+    reconstructed 1-period audios.
+-   draw_harmonics_power_spectra: Displays power spectra for the selected audio file(s)
+    and exports them to a PDF.
+-   plot_individual_harmonics: Plots individual harmonics for selected audio file(s) and
+    export them to a PDF.
+
+Private functions:
+------------------
+
+-   _draw_play_audio_buttons: Draws widgets for playing the original and the reconstructed
+    audio. Used in display_reconstructed_and_original_audio.
+-   _draw_joined_plotter_function: Generates a Plotly figure with joined power spectra for
+    selected audio files. Used in draw_harmonics_power_spectra.
+-   _daw_individual_plotter_function: Generates a Plotly figure with individual power spectra
+    for selected audio files. Used in draw_harmonics_power_spectra.
+-   _get_null_points: Finds null points of a function. Used in plot_individual_harmonics.
+-   _get_numerical_values_from_term: Uses a sympy library to convert a given term to numerical
+    values for plotting. Used in plot_individual_harmonics.
+-   _add_harmonic_to_plot: Adds a single harmonic to a Plotly figure. Used in
+    plot_individual_harmonics.
+-   _update_plot_layout: Updates the layout of a Plotly figure. Used in plot_individual_harmonics.
+-   _get_y_axis_range: Calculates the Y-axis range for all harmonics. Used in
+    plot_individual_harmonics.
+
+Classes:
+--------
+-   _PrepareButtonsMathematicalRepresentation:
+        *   A subclass of the ButtonPanel class defined in general_functions_and_classes_utils.
+        *   Used in print_mathematical_representation_of_signal function.
+-   _PrepareButtonsDisplayAudio:
+        *   A subclass of the ButtonPanel class defined in general_functions_and_classes_utils.
+        *   Used in display_reconstructed_and_original_audio function.
+-   _PrepareButtonsPowerSpectra:
+        *   A subclass of the ButtonPanel class defined in general_functions_and_classes_utils.
+        *   Used in draw_harmonics_power_spectra function.
+
+For more information on the functions and classes, refer to their docstrings.
+
+Notes:
+------
+
+Author: Duje Giljanović (giljanovic.duje@gmail.com)
+License: MIT License
+
+If you use this module in your research or any other publication, please acknowledge it by citing
+as follows:
+
+@software{instruments_fourier_analysis,
+    title = {Fourier Analysis of Musical Instruments},
+    author = {Duje Giljanović},
+    year = {2024},
+    url = {github.com/gilja/instruments_fourier_analysis},
+}
+"""
+
+import os
+from functools import partial
 import ipywidgets as widgets
 from IPython.display import Audio, display, clear_output
 from ipywidgets import Layout
-from functools import partial
 import numpy as np
-import os
 from scipy.io import wavfile
 import plotly.graph_objs as go
 import sympy
@@ -14,34 +84,41 @@ from settings import config as cfg
 
 class _PrepareButtonsMathematicalRepresentation(gfcu.ButtonPanel):
     """
-    Subclass of a ButtonPanel class used for creating a panel with "Display Function"
-    and "Toggle All" buttons. Used for displaying mathematical representations of
-    signals through Fourier series.
+    A subclass of the ButtonPanel class used for creating a panel with "Toggle All"
+    and "Display Function" buttons. Used in print_mathematical_representation_of_signal
+    function.
     """
 
     def __init__(self):
         """
         Initializes _PrepareButtonsMathematicalRepresentation with predefined buttons.
         """
-        super().__init__(["Display Function", "Toggle All"])
+        super().__init__(["Toggle All", "Display Function"])
 
 
 def print_mathematical_representation_of_signal(
     files, mathematical_representation_of_signal_per_instrument
 ):
     """
-    Display mathematical representations of the reconstructed audio signals for
-    selected audio files.
+    Displays a mathematical representation of the reconstructed audio signals
+    for selected audio files.
 
-    Function generates a graphical user interface (GUI) that allows the user
-    to select files and view the mathematical representations of reconstructed
-    signal. It displays checkboxes for each audio file, buttons to control the
-    display, and prints the mathematical representation of the selected audio files.
+    The function generates a graphical user interface (GUI) that allows a user
+    to select audio files and view the mathematical representations of reconstructed
+    signal for selected audio files.
+
+    Buttons:
+
+    -   Toggle All: Toggles all checkboxes on or off. Off by default.
+    -   Display Function: Displays the mathematical representation of the
+        reconstructed signal for the selected audio file(s).
 
     Args:
-        files (list): A list of audio file paths.
-        mathematical_representation_of_signal_per_instrument (list): A list of
-            mathematical representations for each audio file.
+        files (list):
+            -   A list of audio file paths.
+
+        mathematical_representation_of_signal_per_instrument (list):
+            -   A list of mathematical representations for each audio file.
 
     Returns:
         None
@@ -53,10 +130,12 @@ def print_mathematical_representation_of_signal(
 
     # Prepare buttons
     buttons_panel = _PrepareButtonsMathematicalRepresentation()
-    display_function_button, toggle_all_button = buttons_panel.get_buttons()
+    toggle_all_button, display_function_button = buttons_panel.get_buttons()
     button_container = buttons_panel.get_container()
 
     display(checkbox_grid, button_container)
+
+    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
 
     def _display_function(_):
         clear_output(wait=True)  # unique output
@@ -77,13 +156,11 @@ def print_mathematical_representation_of_signal(
 
     display_function_button.on_click(_display_function)
 
-    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
-
 
 class _PrepareButtonsDisplayAudio(gfcu.ButtonPanel):
     """
-    Subclass of a ButtonPanel class used for creating a panel with "Display Audio",
-    "Toggle All" and "Save Selected Reconstructed" buttons. Used in
+    A subclass of the ButtonPanel class used for creating a panel with "Toggle All",
+    "Display Audio" and "Save Selected Reconstructed" buttons. Used in
     display_reconstructed_and_original_audio function.
     """
 
@@ -93,9 +170,9 @@ class _PrepareButtonsDisplayAudio(gfcu.ButtonPanel):
         """
         super().__init__(
             [
-                "Display",
                 "Toggle All",
-                "Save Selected",
+                "Display Audio Widgets",
+                "Save Selected Reconstructed",
             ]
         )
 
@@ -110,23 +187,36 @@ def _draw_play_audio_buttons(
     rows,
 ):
     """
-    Draw play audio buttons for original and reconstructed audio.
+    Draws widgets for playing the original and the reconstructed audio.
 
-    This function generates widgets to play the original and reconstructed audio
-    for a selected audio file. It creates Audio widgets for both audio signals
+    The function generates widgets to play the original and reconstructed audio
+    for a selected audio file(s). It creates Audio widgets for both audio signals
     and adds labels to identify them. These widgets are then combined into a
-    horizontal layout and added to the `rows` list. Depending on the number of
-    checked checkboxes, the function may add multiple rows to the `rows` list.
-    The function is used in display_reconstructed_and_original_audio function.
+    horizontal layout. Depending on the number of the selected audio files, the
+    function may add multiple rows of widgets. The function is used in the
+    display_reconstructed_and_original_audio function.
 
     Args:
-        idx (int): Index of the selected audio file.
-        audio_file_names (list): List of audio file names.
-        period_bounds (list): List of period bounds for audio files.
-        sample_rates (list): List of sample rates for audio files.
-        one_period_signals (list): List of one-period audio signals.
-        reconstructed_signals (list): List of reconstructed audio signals.
-        rows (list): List of rows to which the widgets are added.
+        idx (int):
+            -   The index of the selected audio file.
+
+        audio_file_names (list):
+            -   Audio file names.
+
+        period_bounds (list):
+            -   Period bounds for audio files.
+
+        sample_rates (list):
+            -   Sample rates for audio files.
+
+        one_period_signals (list):
+            -   1-period audio signals.
+
+        reconstructed_signals (list):
+            -   Reconstructed audio signals.
+
+        rows (list):
+            -   Rows to which the widgets are added.
 
     Returns:
         None
@@ -179,17 +269,32 @@ def display_reconstructed_and_original_audio(
     files, reconstructed_signals, one_period_signals, sample_rates
 ):
     """
-    Display widgets for playing original and reconstructed audio.
+    Displays widgets for playing original and reconstructed 1-period audios.
 
-    Function generates a graphical user interface (GUI) that allows the user
+    The function generates a graphical user interface (GUI) that allows the user
     to select files and play their original and reconstructed audio. The GUI
-    also allows the user to export reconstructed audio to a predefined directory.
+    also allows the user to export reconstructed audio files in WAV format.
+
+    Buttons:
+
+    -   Toggle All: Toggles all checkboxes on or off. Off by default.
+    -   Display Audio Widgets: Displays widgets for playing the original and the
+        reconstructed audio for the selected audio file(s).
+    -   Save Selected Reconstructed: Saves the reconstructed audio for the selected
+        audio file(s) in WAV format.
 
     Args:
-        files (list): List of audio file paths.
-        reconstructed_signals (list): List of reconstructed audio signals.
-        one_period_signals (list): List of one-period audio signals.
-        sample_rates (list): List of sample rates for audio files.
+        files (list):
+            -   Audio file paths. Full paths to the files are expected.
+
+        reconstructed_signals (list):
+            -   Reconstructed audio signals.
+
+        one_period_signals (list):
+            -   1-period audio signals.
+
+        sample_rates (list):
+            -   Sample rates for audio files.
 
     Returns:
         None
@@ -202,13 +307,15 @@ def display_reconstructed_and_original_audio(
     # Prepare buttons
     buttons_panel = _PrepareButtonsDisplayAudio()
     (
-        display_audio_button,
         toggle_all_button,
+        display_audio_button,
         save_selected_button,
     ) = buttons_panel.get_buttons()
     button_container = buttons_panel.get_container()
 
     display(checkbox_grid, button_container)
+
+    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
 
     def _display_audio(_):
         clear_output(wait=True)  # unique output
@@ -235,21 +342,19 @@ def display_reconstructed_and_original_audio(
 
     display_audio_button.on_click(_display_audio)
 
-    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
-
     def _save_selected_button(_):
+        clear_output(wait=True)  # unique output
+        display(checkbox_grid, button_container)  # unique output
+
         selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
         if not selected_indices:
             return
 
         period_bounds = list(pb.PERIOD_BOUNDS.values())
         output_directory = os.path.join(
-            cfg.PATH_RESULTS, "one_period_reconstructed_audio"
+            cfg.PATH_RESULTS, "reconstructed_one_period_audio/"
         )
 
-        print(
-            f'Exporting reconstructed audio to ".{output_directory[len(cfg.PATH_BASE):]}'
-        )
         for idx in selected_indices:
             name = audio_file_names[idx]
             duration = period_bounds[idx][1] - period_bounds[idx][0]
@@ -259,19 +364,26 @@ def display_reconstructed_and_original_audio(
                 reconstructed_signals[idx], int(1 / duration)
             )
 
+            # Save the WAV file
+            audio_path = os.path.join(output_directory, f"{name}.wav")
+
             wavfile.write(
-                f"{output_directory}/{name}_reconstructed.wav",
+                audio_path,
                 sample_rate,
                 one_period_audio_data_reconstructed,
             )
+
+        print(
+            f'Exported reconstructed audio to ".{output_directory[len(cfg.PATH_BASE):]}'
+        )
 
     save_selected_button.on_click(_save_selected_button)
 
 
 class _PrepareButtonsPowerSpectra(gfcu.ButtonPanel):
     """
-    Subclass of a ButtonPanel class used for creating a panel with "Plot Joined",
-    "Plot Individual", "Toggle All", "Save Joined" and "Save Individual" buttons.
+    A subclass of the ButtonPanel class used for creating a panel with "Toggle All",
+    "Plot Joined", "Plot Individual", "Save Joined" and "Save Individual" buttons.
     Used in draw_harmonics_power_spectra function.
     """
 
@@ -281,11 +393,11 @@ class _PrepareButtonsPowerSpectra(gfcu.ButtonPanel):
         """
         super().__init__(
             [
-                "Plot Joined",
-                "Plot Individual",
                 "Toggle All",
-                "Save Joined",
-                "Save Individual",
+                "Plot Selected Grouped",
+                "Plot Selected Individually",
+                "Save Selected Grouped",
+                "Save Selected Individually",
             ]
         )
 
@@ -293,9 +405,31 @@ class _PrepareButtonsPowerSpectra(gfcu.ButtonPanel):
 def _draw_joined_plotter_function(
     fig, selected_indices, relative_harmonic_powers_per_instrument, audio_file_names
 ):
+    """
+    Generates a Plotly figure with joined power spectra for selected
+    audio files. The function is used in the draw_harmonics_power_spectra function.
+
+    Args:
+        fig (plotly.graph_objs.Figure):
+            -   The Plotly figure to export.ž
+
+        selected_indices (list):
+            -   Indices of selected audio files.
+
+        relative_harmonic_powers_per_instrument (list):
+            -   Relative harmonic powers for each audio file.
+
+        audio_file_names (list):
+            -   Audio file names.
+
+    Returns:
+        None
+    """
+
     for idx in selected_indices:
         relative_powers = relative_harmonic_powers_per_instrument[idx] * 100
         harmonic_order = list(range(1, len(relative_powers) + 1))
+
         fig.add_trace(
             go.Bar(
                 x=harmonic_order,
@@ -304,16 +438,28 @@ def _draw_joined_plotter_function(
             )
         )
         fig.update_layout(
-            title={
-                "text": "Harmonic Power Spectrum",
-                "x": 0.5,  # Set to 0.5 for center alignment horizontally
-            },
+            title_text="Harmonic Power Spectrum",
+            title_x=0.5,
             xaxis_title="Order of harmonic",
             yaxis_title="Relative Power",
         )
 
 
 def _find_closest_note_name(frequency):
+    """
+    Finds the closest note name for a given frequency.
+
+    The function uses the NOTE_FREQUENCIES dictionary from the config file to
+    map the frequency to the closest note name.
+
+    Args:
+        frequency (float):
+            -   The frequency for which the closest note name is found.
+
+    Returns:
+        -   str: The closest note name.
+    """
+
     closest_note = min(cfg.NOTE_FREQUENCIES, key=lambda note: abs(note - frequency))
     return cfg.NOTE_FREQUENCIES[closest_note]
 
@@ -321,6 +467,33 @@ def _find_closest_note_name(frequency):
 def _daw_individual_plotter_function(
     idx, relative_harmonic_powers_per_instrument, audio_file_names
 ):
+    """
+    Generates a Plotly figure with individual power spectra for selected
+    audio files.
+
+    The function calculates the relative power of each harmonic (expressed
+    in %) and finds the fundamental frequency for the selected audio file
+    using the period bounds from the config file.
+    It then calculates the frequencies of each harmonic and finds the
+    closest note name for each harmonic. The function uses the calculated
+    frequencies and note names to create a custom label for each bar in the
+    plot.
+    The function is used in the draw_harmonics_power_spectra function.
+
+    Args:
+        idx (int):
+            -   The index of the selected audio file.
+
+        relative_harmonic_powers_per_instrument (list):
+            -   Relative harmonic powers for each audio file.
+
+        audio_file_names (list):
+            -   Audio file names.
+
+    Returns:
+        None
+    """
+
     relative_powers = relative_harmonic_powers_per_instrument[idx] * 100
     harmonic_order = list(range(1, len(relative_powers) + 1))
 
@@ -373,6 +546,40 @@ def _daw_individual_plotter_function(
 
 
 def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument):
+    """
+    Displays power spectra for the selected audio file(s) and exports them to a PDF.
+
+    The function generates a GUI that allows the user to select files and view their
+    power spectra. The GUI also allows the user to export the power spectra to PDF.
+    This can be done for all selected files together, drawing them on the same figure
+    as a grouped bar plot, or for each file individually, drawing them on separate
+    figures. If plotted individually, the function also displays the fundamental
+    frequency and the closest note name for each harmonic on hover as well as the note
+    name on top of each bar.
+
+    Buttons:
+
+    -   Toggle All: Toggles all checkboxes on or off. Off by default.
+    -   Plot Selected Grouped: Plots the power spectra for the selected audio files
+        on the same figure as a grouped bar plot.
+    -   Plot Selected Individually: Plots the power spectra for the selected audio file(s)
+        on separate figures.
+    -   Save Selected Grouped: Saves the power spectra for the selected audio files
+        to a single PDF file as a grouped bar plot.
+    -   Save Selected Individually: Saves the power spectra for the selected audio file(s)
+        as separate PDF files.
+
+    Args:
+        files (list):
+            -   A list of audio file paths. Full paths to the files are expected.
+
+        relative_harmonic_powers_per_instrument (list):
+            -   A list of relative harmonic powers for each audio file.
+
+    Returns:
+        None
+    """
+
     audio_file_names = gfcu.get_names(files)
     checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(audio_file_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
@@ -380,15 +587,17 @@ def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument)
     # Prepare buttons
     buttons_panel = _PrepareButtonsPowerSpectra()
     (
+        toggle_all_button,
         plot_joined_button,
         plot_individual_button,
-        toggle_all_button,
         save_joined_button,
         save_individual_button,
     ) = buttons_panel.get_buttons()
     button_container = buttons_panel.get_container()
 
     display(checkbox_grid, button_container)
+
+    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
 
     def _draw_joined(_):
         clear_output(wait=True)  # unique output
@@ -430,9 +639,10 @@ def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument)
 
     plot_individual_button.on_click(_draw_individual)
 
-    toggle_all_button.on_click(partial(gfcu.toggle_all, checkboxes))
-
     def _save_joined(_):
+        clear_output(wait=True)  # unique output
+        display(checkbox_grid, button_container)  # unique output
+
         selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
         if not selected_indices:
             return
@@ -452,13 +662,15 @@ def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument)
             name += f"{audio_file_names[idx]}_"
         name = name[:-1]  # remove last underscore
 
-        pdf_path = os.path.join(cfg.PATH_RESULTS, "power_spectra/")
+        save_path = os.path.join(cfg.PATH_RESULTS, "power_spectra/")
+        pdf_path = os.path.join(save_path, f"waveform_{name}.pdf")
+
         gfcu.export_to_pdf(
-            fig, n_rows=2, pdf_path=pdf_path + name + ".pdf"
+            fig, n_rows=2, pdf_path=pdf_path
         )  # n_rows=2 to modify plot size
 
         print(
-            f"Saved joined plot to .{pdf_path[len(cfg.PATH_BASE):]}"
+            f"Saved joined plot to .{save_path[len(cfg.PATH_BASE):]}"
         )  # print relative path
 
     save_joined_button.on_click(_save_joined)
@@ -480,13 +692,16 @@ def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument)
 
             # Save the plot to PDF
             name = audio_file_names[idx]
-            pdf_path = os.path.join(cfg.PATH_RESULTS, "power_spectra/")
+
+            save_path = os.path.join(cfg.PATH_RESULTS, "power_spectra/")
+            pdf_path = os.path.join(save_path, f"waveform_{name}.pdf")
+
             gfcu.export_to_pdf(
-                fig, n_rows=2, pdf_path=pdf_path + name + ".pdf"
+                fig, n_rows=2, pdf_path=pdf_path
             )  # n_rows=2 to modify plot size
 
             print(
-                f"Saved individual plot to .{pdf_path[len(cfg.PATH_BASE):]}"
+                f"Saved individual plots to .{save_path[len(cfg.PATH_BASE):]}"
             )  # print relative path
 
     save_individual_button.on_click(_save_individual)
@@ -494,9 +709,9 @@ def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument)
 
 class _PrepareButtonsDrawIndividualHarmonics(gfcu.ButtonPanel):
     """
-    Subclass of a ButtonPanel class used for creating a panel with "Toggle All",
-    "Plot harmonics", "Save Joined" and "Save Individual" buttos. Used in
-    plot_individual_harmonics function.
+    A subclass of the ButtonPanel class used for creating a panel with "Toggle All",
+    "Plot harmonics", "Save Joined" and "Save Individual" buttons.
+    Used in plot_individual_harmonics function.
     """
 
     def __init__(self):
@@ -507,30 +722,30 @@ class _PrepareButtonsDrawIndividualHarmonics(gfcu.ButtonPanel):
             [
                 "Toggle All",
                 "Plot Harmonics",
-                "Save Joined",
-                "Save Individual",
+                "Save Selected Plots",
+                "Save Individual Harmonics Separately",
             ]
         )
 
 
 def _get_null_points(grouped_terms):
     """
-    Find null points of a function.
+    Finds null points of a function.
 
-    Function finds the null points of a sympy function. The null-points are
-    used to define the range of t values for which the function is plotted.
+    The function finds the null points of a function using sympy library.
+    The null points are used to define the range of t values (x-axis) for
+    which the function is plotted.
     Only the null points of the first harmonic are used to define the range
     since the first harmonic has the largest period by definition. By finding
     the proper range for the first harmonic, the proper range for all other
     harmonics is also defined.
 
     Args:
-        grouped_terms (list): A list functions representing individual harmonics.
-                      Each element of the list is a string is a list of
-                      strings representing individual terms.
+        grouped_terms (list):
+            -   All the harmonics in the sound.
 
     Returns:
-        null_points (list): A list of null points.
+        null_points (list): Null points.
     """
 
     # Find the null points of the first harmonic. Other harmonics
@@ -555,26 +770,42 @@ def _get_null_points(grouped_terms):
 
 def _get_numerical_values_from_term(term, t_min, t_max):
     """
-    Function converts given term to numerical values for plotting. It returns a list
-    of numerical values for t and y axes. The function is used in plot_individual_harmonics.
+    Uses a sympy library to convert a given term to numerical values for plotting.
+
+    The function joins the term (list of strings) into a single string and parses
+    the function string using sympy. It then creates a list of t values within the
+    specified range and evaluates the function for each value of t.
+    Used in plot_individual_harmonics function.
 
     Args:
-        term (list): A list of strings representing individual harmonics. If the term
-                     represents the first harmonic, the list will contain three strings
-                     (constant, sine term, and cosine term). If the term represents any other
-                     harmonic, the list will contain two strings (sine term and cosine term).
-        t_min (float): The minimum value of t for which the function is plotted.
-        t_max (float): The maximum value of t for which the function is plotted.
+        term (list):
+            -   List of strings representing a single term of the Fourier series.
+                *   The first element of the list contains the average term, a term
+                    with cos and a term with sin; therefore, it has a length of 3.
+                *   All other elements of the list contain a term with cos and a term
+                    with sin; therefore, they have a length of 2.
+                *   Note: the function returns positive coefficients a and b only
+                    (without the sign). This is because the coefficients are used to
+                    calculate the amplitude of the signal which is obtained by square
+                    root of a^2 + b^2.
+
+        t_min (float):
+            -   The minimum value of t for which the function is plotted.
+
+        t_max (float):
+            -   The maximum value of t for which the function is plotted.
 
 
     Returns:
-        t_values (list): A list of numerical values representing time coordinates.
-        y_values (list): A list of numerical values representing values of the function for
-                         each time coordinate.
+        tuple of (list, list)
+        -   A tuple containing two elements:
+            *   t_values (list): Numerical values representing time coordinates.
+            *   y_values (list): Values of the function for each time coordinate.
     """
 
     # join the terms into a single string
     term = "".join(term)
+
     # parse the function string using sympy
     t = sympy.symbols("t")
     f = sympy.sympify(term)
@@ -589,6 +820,26 @@ def _get_numerical_values_from_term(term, t_min, t_max):
 
 
 def _add_harmonic_to_plot(fig, t_values, y_values, name):
+    """
+    Adds a single harmonic to a Plotly figure. Used in plot_individual_harmonics
+
+    Args:
+        fig (plotly.graph_objs.Figure):
+            -   The Plotly figure to export.
+
+        t_values (list):
+            -   Numerical values representing time coordinates.
+
+        y_values (list):
+            -   Values of the function for each time coordinate.
+
+        name (str):
+            -   Name shown in the legend.
+
+    Returns:
+        None
+    """
+
     fig.add_trace(
         go.Scatter(
             x=t_values,
@@ -601,6 +852,29 @@ def _add_harmonic_to_plot(fig, t_values, y_values, name):
 
 
 def _update_plot_layout(fig, title, legend=True, y_range=None):
+    """
+    Updates the layout of a Plotly figure.
+
+    This function updates the layout of a Plotly figure by setting the title,
+    x-axis title, legend, and y-axis range. It is used in plot_individual_harmonics
+
+    Args:
+        fig (plotly.graph_objs.Figure):
+            -   The Plotly figure to export.
+
+        title (str):
+            -   The title of the figure.
+
+        legend (bool, optional):
+            -   To display the legend.
+
+        y_range (list, optional):
+            -   Y-axis range.
+
+    Returns:
+        None
+    """
+
     layout = {
         "title": {"text": title, "x": 0.5},  # Title settings
         "xaxis_title": "t",  # X-axis title
@@ -615,20 +889,26 @@ def _update_plot_layout(fig, title, legend=True, y_range=None):
 
 def _get_y_axis_range(grouped_terms, t_min, t_max):
     """
-    Function calculates the maximum value of y for all harmonics. It is used in
-    plot_individual_harmonics in order to set the same y-axis range for all plots
-    when button "Save Individual" is clicked.
+    Calculates the Y-axis range for all harmonics.
+
+    The function calculates the maximum value of a function for all harmonics and
+    adds a margin to it. The margin is defined in the config file. It is used in
+    plot_individual_harmonics to set the same y-axis range for all plots.
 
     Args:
-        grouped_terms (list): A list functions representing individual harmonics.
-                      Each element of the list is a string is a list of
-                      strings representing individual terms.
-        t_min (float): The minimum value of t for which the function is plotted.
-        t_max (float): The maximum value of t for which the function is plotted.
+        grouped_terms (list):
+            -   All the harmonics in the sound.
+
+        t_min (float):
+            -   The minimum value of t for which the function is plotted.
+
+        t_max (float):
+            -   The maximum value of t for which the function is plotted.
 
     Returns:
         max_y_value (float): The maximum value of y for all harmonics plus a margin.
     """
+
     max_y_per_harmonic = []
     for term in grouped_terms:
         _, y_values = _get_numerical_values_from_term(term, t_min, t_max)
@@ -640,6 +920,42 @@ def _get_y_axis_range(grouped_terms, t_min, t_max):
 def plot_individual_harmonics(
     files, mathematical_representation_of_signal_per_instrument
 ):
+    """
+    Plots individual harmonics for selected audio file(s) and export them to a PDF.
+
+    The function generates a GUI that allows the user to select audio file(s) and
+    plot individual harmonics. The GUI also allows a user to export the plots as a
+    PDF. The user can choose to draw all harmonics for the selected audio file(s)
+    in a single plot or to draw each harmonic in a separate plot.
+
+    Buttons:
+
+    -   Toggle All: Toggles all checkboxes on or off. Off by default.
+    -   Plot Harmonics: Plots individual harmonics for the selected audio file(s).
+        All harmonics are plotted on the same figure for each selected audio file.
+    -   Save Selected Plots: Saves the plots for the selected audio file(s) to
+        separate PDF files. Each PDF file contains a plot with all harmonics.
+    -   Save Individual Harmonics Separately: Saves the individual harmonics for
+        the selected audio file(s) as separate PDF files.
+
+    Args:
+        files (list of str):
+            -   A list of strings representing the file paths to the audio files.
+                Absolute paths are recommended as they are used throughout the
+                tool.
+
+        mathematical_representation_of_signal_per_instrument (list):
+            -   2D list of mathematical representations of the signal for each instrument.
+                Each element of this list is another list that stores the mathematical
+                representation of the signal for one instrument (recording). The structure
+                of the inner list is as follows:
+                * First element: average term, a term with cos, and a term with sin.
+                * All other elements: a term with cos and a term with sin.
+
+    Returns:
+        None
+    """
+
     audio_file_names = gfcu.get_names(files)
     checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(audio_file_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
@@ -701,13 +1017,15 @@ def plot_individual_harmonics(
                 # Save the plot to PDF
                 name = audio_file_names[idx]
 
-                pdf_path = os.path.join(cfg.PATH_RESULTS, "harmonics/")
+                save_path = os.path.join(cfg.PATH_RESULTS, "harmonics_function_plots/")
+                pdf_path = os.path.join(save_path, f"harmonics_{name}.pdf")
+
                 gfcu.export_to_pdf(
-                    fig, n_rows=2, pdf_path=pdf_path + name + ".pdf"
+                    fig, n_rows=2, pdf_path=pdf_path
                 )  # n_rows=2 to modify plot size
 
                 print(
-                    f"Saved joined plot to .{pdf_path[len(cfg.PATH_BASE):]}"
+                    f"Saved joined plot to .{save_path[len(cfg.PATH_BASE):]}"
                 )  # print relative path
 
     plot_harmonics_button.on_click(_plot_harmonics)
@@ -757,13 +1075,15 @@ def plot_individual_harmonics(
                 # Save the plot to PDF
                 name = f"{audio_file_names[idx]}_{str(n + 1)}th_harmonic"
 
-                pdf_path = os.path.join(cfg.PATH_RESULTS, "harmonics/")
+                save_path = os.path.join(cfg.PATH_RESULTS, "harmonics_function_plots/")
+                pdf_path = os.path.join(save_path, f"{name}.pdf")
+
                 gfcu.export_to_pdf(
-                    fig, n_rows=2, pdf_path=pdf_path + name + ".pdf"
+                    fig, n_rows=2, pdf_path=pdf_path
                 )  # n_rows=2 to modify plot size
 
                 print(
-                    f"Saved joined plot to .{pdf_path[len(cfg.PATH_BASE):]}"
+                    f"Saved individual plots to .{save_path[len(cfg.PATH_BASE):]}"
                 )  # print relative path
 
     save_individual_button.on_click(_save_individual)

@@ -1,3 +1,52 @@
+"""
+io_utils:
+=========
+
+The module contains utility functions for loading, playing and exporting audio data.
+
+Public functions:
+-----------------
+
+-   load_sound: Load and normalize a WAV audio file.
+-   play_audio: Displays audio players for a list of audio files within a Jupyter notebook.
+-   export_and_store_one_period_audio: Export audio as a WAV file and store audio data in an array.
+-   save_harmonics_sounds: Save individual harmonics for each selected instrument as a WAV file.
+-   create_directory_structure: Creates a directory structure for storing import data and results.
+
+Private functions:
+------------------
+
+-   _get_sound_frequency: Returns the fundamental frequency for the selected audio file.
+-   _get_coefficients: Extracts coefficients from a term of the Fourier series.
+-   _get_max_amplitude: Calculates the amplitude of the dominant harmonic within the audio file.
+-   _calc_scaling_factors: Calculates the scaling factors for the amplitude of each harmonic.
+
+Classes:
+--------
+
+-   _PrepareButtonsSaveHarmonicSounds:
+        *   A subclass of the ButtonPanel class defined in general_functions_and_classes_utils.
+        *   Used in save_harmonics_sounds function.
+
+For more information on the functions and classes, refer to their docstrings.
+
+Notes:
+------
+
+Author: Duje Giljanović (giljanovic.duje@gmail.com)
+License: MIT License
+
+If you use this module in your research or any other publication, please acknowledge it by citing
+as follows:
+
+@software{instruments_fourier_analysis,
+    title = {Fourier Analysis of Musical Instruments},
+    author = {Duje Giljanović},
+    year = {2024},
+    url = {github.com/gilja/instruments_fourier_analysis},
+}
+"""
+
 import os
 from scipy.io import wavfile
 import ipywidgets as widgets
@@ -12,31 +61,33 @@ from utils import general_functions_and_classes_utils as gfcu
 
 def load_sound(filename):
     """
-    Load and normalize a WAV audio file.
+    Loads and normalizes a WAV audio file.
 
-    Reads a WAV file specified by the filename and normalizes the audio sample
-    data to the range of [-1, 1]. If the audio file has multiple channels
-    (stereo), only the first channel is returned.
+    The function reads a WAV file specified by the filename and normalizes
+    the audio sample data to the range of [-1, 1]. If the audio file has
+    multiple channels (stereo), only the first channel is returned.
 
-    Parameters:
-        filename (str): The path to the WAV audio file. The path can be either
-                        relative or absolute.
+    Args:
+        filename (str):
+            -   The path to the WAV audio file. Absolute paths are recommended
+                as they are used throughout the tool.
 
     Returns:
-        tuple of (np.ndarray, int): A tuple containing two elements:
-            - data (np.ndarray): The normalized audio sample data. If the
-              audio is stereo, only the first channel is returned.
-            - sample_rate (int): The sample rate of the audio file in samples
-              per second.
+        tuple of (np.ndarray, int):
+            -   A tuple containing two elements:
+                *   data (np.ndarray): The normalized audio sample data. If the
+                    audio is stereo, only the first channel is returned.
+                *   sample_rate (int): The sample rate of the audio file in samples
+                    per second.
 
     Raises:
         ValueError: If the file is not found or cannot be read.
         TypeError: If the provided file is not in the WAV format.
 
     Notes:
-        - The function requires the 'scipy.io.wavfile' module to be imported as
-          'wavfile' before calling.
-        - The audio file must be in the WAV format.
+        -   The audio file must be in the WAV format.
+        -   Recommended file names are <instrument>-<note>_16_bit.wav
+            all lowercase, e.g. cello-c3_16_bit.wav
     """
 
     if not filename:
@@ -56,54 +107,44 @@ def load_sound(filename):
 
 def play_audio(files, n_columns=3):
     """
-    Display audio players for a list of audio files within a Jupyter notebook.
+    Displays audio players for a list of audio files within a Jupyter Notebook.
 
     The function arranges the audio players in a grid format with a specified
-    number of columns. Each audio player is accompanied by a centered label
+    number of columns. Each audio player is accompanied by a centred label
     derived from the file name. If the number of audio players exceeds the
     number of columns, they are wrapped to the next row.
 
     Parameters:
-        files (list of str): A list of strings representing the file paths to
-                             the audio files. Each path should be a valid
-                             system path.
+        files (list of str):
+            -   A list of strings representing the file paths to the audio files.
+                Absolute paths are recommended as they are used throughout the
+                tool.
 
-        n_columns (int, optional): The number of audio players to display per
-                                   row. Defaults to 3.
+        n_columns (int, optional):
+        -   The number of audio players to display per row. Defaults to 3.
 
     Returns:
         None
 
     Raises:
         ValueError: Raised if the 'files' list is empty.
-
-    Notes:
-        - The function requires the 'ipywidgets' module to be imported as
-          widgets
-
-    Examples:
-        >>> playAudio(['/path/to/audio1.wav', '/path/to/audio2.wav'],
-                        n_columns=2)
     """
+
     rows = []
     row = []
 
     if len(files) == 0:
         raise ValueError("No files provided")
 
-    for file in files:
-        # Extract the file name for display
-        name = file.split("/")[-1]
+    file_names = gfcu.get_names(files)
+
+    for idx, file in enumerate(files):
+        file_name = file_names[idx]
 
         # Create a label for the file name, centered
         label = widgets.Label(
-            value=name.replace(".WAV", "")
-            .replace("_", " ")
-            .replace("-", " ")
-            .replace(" 16 bit", ""),
-            layout=Layout(
-                width="100%", display="flex", justify_content="center"
-            ),  # note: type: ignore
+            value=file_name,
+            layout=Layout(width="100%", display="flex", justify_content="center"),
         )
 
         # Create an Output widget for the audio player
@@ -135,74 +176,97 @@ def play_audio(files, n_columns=3):
 
 def export_and_store_one_period_audio(files, one_period_signals, sample_rates):
     """
-    Export audio as WAV file and store in an array one-period audio signals.
+    Exports audio as a WAV file and stores audio data in an array.
 
-    This function takes a list of input filenames, one-period audio signals,
+    The function takes a list of input filenames, one-period audio signals,
     and their corresponding sample rates. It exports and stores each
-    one-period audio signal as a WAV file, 1-second long in the
+    original one-period audio signal as a WAV file, 1-second long in the
     'one_period_audio' directory within the results folder. It also returns
     the one-period audio signals as an array.
 
     Args:
-        files (list): List of input filenames. Full paths to the files are expected.
-        one_period_signals (list): List of one-period audio signals stored as NumPy arrays.
-                                   This list is created using extract_periods_and_data_rates()
-                                   function from utils/fourier_math_utils.py.
-        sample_rates (list): List of sample rates corresponding to the one-period signals.
-                             This list is created using extract_periods_and_data_rates()
-                             function from utils/fourier_math_utils.py.
+        files (list):
+            -   Input filenames. Full paths to the files are expected.
+
+        one_period_signals (list):
+            -   1-period audio signals stored as NumPy arrays.
+                *   This list is created using extract_periods_and_data_rates()
+                    function from fourier_math_utils module.
+
+        sample_rates (list):
+            -   Sample rates corresponding to the one-period signals.
+                    *   This list is created using extract_periods_and_data_rates()
+                        function from fourier_math_utils module.
 
     Returns:
-        one_period_audios (list): List of one-period audio signals 1-second long.
+        one_period_audios (list):
+            -   1-period audio signals 1-second long.
     """
 
     one_period_audios = []
-    output_directory = os.path.join(cfg.PATH_RESULTS, "one_period_audio")
+    output_directory = os.path.join(cfg.PATH_RESULTS, "original_one_period_audios/")
 
-    for file, signal, sample_rate, period_bound in zip(
-        files, one_period_signals, sample_rates, pb.PERIOD_BOUNDS.values()
+    audio_names = gfcu.get_names(files)
+
+    for idx, (signal, sample_rate, period_bound) in enumerate(
+        zip(one_period_signals, sample_rates, pb.PERIOD_BOUNDS.values())
     ):
-        name = (
-            file.split("/")[-1]
-            .replace(".WAV", "")
-            .replace("-", "_")
-            .replace("_16_bit", "")
-        )
+        name = audio_names[idx]
 
         duration = period_bound[1] - period_bound[0]
+
         # extend the signal to 1 second long to be audible
         one_period_audio_data = np.tile(signal, int(1 / duration))
 
         one_period_audios.append(one_period_audio_data)
+
+        # Save the WAV file
+        audio_path = os.path.join(output_directory, f"{name}.wav")
+
         wavfile.write(
-            f"{output_directory}/{name}",
+            audio_path,
             sample_rate,
             one_period_audio_data,
         )
 
+        print(
+            f"Exported audio to .{output_directory[len(cfg.PATH_BASE):]}"
+        )  # print relative path
+
     return one_period_audios
 
 
-class _PrepareButtonsPlayIndividualHarmonics(gfcu.ButtonPanel):
+class _PrepareButtonsSaveHarmonicSounds(gfcu.ButtonPanel):
     """
-    Subclass of a ButtonPanel class used for creating a panel with "Toggle All" and
-    "Save As Individual Audio files"  buttons. Used in save_harmonics_sounds
+    A subclass of the ButtonPanel class used for creating a panel with "Toggle All"
+    and "Save As Individual Audio files"  buttons. Used in save_harmonics_sounds
     function.
     """
 
     def __init__(self):
         """
-        Initializes _PrepareButtonsPlayIndividualHarmonics with predefined buttons.
+        Initializes _PrepareButtonsSaveHarmonicSounds with predefined buttons.
         """
         super().__init__(
             [
                 "Toggle All",
-                "Save As Individual Audio files",
+                "Save Harmonics As Individual Audio files",
             ]
         )
 
 
 def _get_sound_frequency(idx):
+    """
+    Returns the fundamental frequency for the selected audio file.
+
+    Args:
+        idx (int):
+            -   The index of the selected audio file.
+
+    Returns:
+        float: The fundamental frequency for the selected audio file.
+    """
+
     # Calculate sound periods and frequencies for the fundamental frequency of each instrument
     sound_periods = [end - start for start, end in pb.PERIOD_BOUNDS.values()]
     sound_frequencies = [1 / period for period in sound_periods]
@@ -213,21 +277,24 @@ def _get_sound_frequency(idx):
 
 def _get_coefficients(term):
     """
-    Function extracts coefficients a and b from a term of the Fourier series. The term
-    correspnds to one harmonic of the signal.
+    Extracts the coefficients a and b from a single term of the Fourier series.
+    The term corresponds to one harmonic of the signal.
 
     Args:
-        term (list): List containing average term, a term with cos, and a term with sin.
-                    The first element of the list contains the strings: the average term,
-                    a term with cos, and a term with sin. All other elements of the list
-                    contain two strings: a term with cos and a term with sin.
-                    Note: the function returns positive coefficients a and b only (without
-                    the sign). This is because the coefficients are used to calculate the
-                    amplitude of the signal which is obtained by square root of a^2 + b^2.
+        term (list):
+            -   List of strings representing a single term of the Fourier series.
+                *   The first element of the list contains the average term, a term
+                    with cos and a term with sin; therefore, it has a length of 3.
+                *   All other elements of the list contain a term with cos and a term
+                    with sin; therefore, they have a length of 2.
+                *   Note: the function returns positive coefficients a and b only
+                    (without the sign). This is because the coefficients are used to
+                    calculate the amplitude of the signal which is obtained by square
+                    root of a^2 + b^2.
 
     Returns:
-        a (float): Coefficient a of the Fourier series standing in front of cosine term.
-        b (float): Coefficient b of the Fourier series standing in front of sine term.
+        a (float): Coefficient a of the Fourier series standing in front of the cosine term.
+        b (float): Coefficient b of the Fourier series standing in front of the sine term.
     """
     if len(term) == 3:
         term = term[1:]  # remove the average term
@@ -245,13 +312,14 @@ def _get_coefficients(term):
 
 def _get_max_amplitude(grouped_terms):
     """
-    Function calculates the maximum amplitude of the signal corresponding to the dominant harmonic.
+    Calculates the amplitude of the dominant harmonic within the audio file.
 
     Args:
-        grouped_terms (list): List of grouped terms for the dominant harmonic.
+        grouped_terms (list):
+            -   All the harmonics in the sound.
 
     Returns:
-        max_amplitude (float): Maximum amplitude of the signal corresponding to the dominant harmonic.
+        max_amplitude (float): The amplitude of the dominant harmonic.
     """
     max_amplitude = np.max(
         [
@@ -264,6 +332,23 @@ def _get_max_amplitude(grouped_terms):
 
 
 def _calc_scaling_factors(relative_harmonic_powers, grouped_terms):
+    """
+    Calculates the scaling factors for the amplitude of each harmonic.
+
+    Scaling factors are calculated using the relative harmonic powers and the
+    maximum amplitude of the signal corresponding to the dominant harmonic.
+
+    Args:
+        relative_harmonic_powers (list):
+            -   Relative harmonic powers. The relative harmonic power is
+                calculated as a fraction of the total signal power.
+
+        grouped_terms (list):
+            -   All the harmonics in the sound.
+
+    Returns:
+        scaling_factors (list): Scaling factors for the amplitude of each harmonic.
+    """
     scaling_factors = [
         np.sqrt(relative_harmonic_powers[n]) for n in range(len(grouped_terms))
     ]
@@ -277,18 +362,25 @@ def save_harmonics_sounds(
     relative_harmonic_powers_per_instrument,
 ):
     """
-    Save individual harmonics for each selected instrument as a WAV file.
+    Saves individual harmonics for each of the selected instruments as a WAV file.
 
-    Allows to select one ore more instruments by clicking on the checkboxes. The function
-    separates the signal into individual harmonics (grouped terms) and calculates the
-    relative harmonic powers and a total sound power for the selected instrument. Then,
-    it calculates the scaling factors for each harmonic based on the relative harmonic
-    powers and the maximum amplitude of the signal corresponding to the dominant harmonic.
-    Finally, it saves each harmonic as a WAV file.
+    The function allows the user to select one or more instruments by clicking on the
+    checkboxes. It separates the signal into individual harmonics (grouped terms) and
+    calculates the relative harmonic powers and the total sound power for the selected
+    instrument. Then, it calculates the scaling factors for each harmonic based on the
+    relative harmonic powers and the maximum amplitude of the signal corresponding to
+    the dominant harmonic. This is reflected in the loudness of each harmonic.
+    Finally, the function allows the user to save each harmonic as a WAV file.
+
+    Buttons:
+
+    -   Toggle All: Toggles all checkboxes on/off. Off by default.
+    -   Save Harmonics As Individual Audio files: Saves individual harmonics as the WAV
+        files for each selected instrument.
 
     Args:
         files (list):
-            - List of input filenames. Full paths to the files are expected.
+            - Input filenames. Full paths to the files are expected.
 
         mathematical_representation_of_signal_per_instrument (list):
             -   2D list of mathematical representations of the signal for each instrument.
@@ -299,19 +391,20 @@ def save_harmonics_sounds(
                 * All other elements: a term with cos and a term with sin.
 
         relative_harmonic_powers_per_instrument (list):
-            -   List of relative harmonic powers for each instrument. The relative harmonic
+            -   Relative harmonic powers for each instrument. The relative harmonic
                 power is calculated as a fraction of the total signal power.
 
     Returns:
         None
     """
+
     audio_names = gfcu.get_names(files)
 
     checkboxes, checkbox_layout = gfcu.prepare_checkbox_grid(audio_names)
     checkbox_grid = widgets.GridBox(checkboxes, layout=checkbox_layout)
 
     # prepare buttons
-    buttons_panel = _PrepareButtonsPlayIndividualHarmonics()
+    buttons_panel = _PrepareButtonsSaveHarmonicSounds()
     (
         toggle_all_button,
         save_individual_audios_button,
@@ -353,7 +446,7 @@ def save_harmonics_sounds(
             )
 
             output_directory = os.path.join(
-                cfg.PATH_RESULTS, "harmonics_sounds", audio_names[idx]
+                cfg.PATH_RESULTS, "harmonics_sounds", f"{audio_names[idx]}/"
             )
 
             for n, term in enumerate(grouped_terms):
@@ -385,3 +478,45 @@ def save_harmonics_sounds(
                 print(f"Saved joined plot to .{output_directory[len(cfg.PATH_BASE):]}")
 
     save_individual_audios_button.on_click(_save_individual_audios)
+
+
+def create_directory_structure():
+    """
+    Creates a directory structure for storing instrument samples and results.
+
+    The function creates the following directories:
+
+    -   ./data/instrument_samples: stores the instrument samples
+    -   ./results/analysed: stores the results of the analysis
+        *   ./results/analysed/harmonics_function_plots
+        *   ./results/analysed/harmonics_sounds
+        *   ./results/analysed/original_one_period_audios
+        *   ./results/analysed/original_waveforms
+        *   ./results/analysed/power_spectra
+        *   ./results/analysed/reconstructed_one_period_audio
+        *   ./results/analysed/waveform_reconstruction
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
+
+    instrument_samples = os.path.join(cfg.PATH_INSTRUMENT_SAMPLES)
+    results = os.path.join(cfg.PATH_RESULTS)
+    original_waveforms = os.path.join(results, "original_waveforms")
+    original_one_period_audios = os.path.join(results, "original_one_period_audios")
+    reconstructed_one_period_audios = os.path.join(
+        results, "reconstructed_one_period_audio"
+    )
+    power_spectra = os.path.join(results, "power_spectra")
+    harmonics_function_plots = os.path.join(results, "harmonics_function_plots")
+
+    os.makedirs(instrument_samples, exist_ok=True)
+    os.makedirs(results, exist_ok=True)
+    os.makedirs(original_waveforms, exist_ok=True)
+    os.makedirs(original_one_period_audios, exist_ok=True)
+    os.makedirs(reconstructed_one_period_audios, exist_ok=True)
+    os.makedirs(power_spectra, exist_ok=True)
+    os.makedirs(harmonics_function_plots, exist_ok=True)

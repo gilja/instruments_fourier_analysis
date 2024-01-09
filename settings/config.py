@@ -1,3 +1,49 @@
+"""
+config
+======
+
+This configuration file contains constants used throughout the project.
+
+Constants:
+----------
+
+-   PATH_BASE: Base path of the project.
+-   PATH_DATA: Path to the data folder.
+-   PATH_RESULTS: Path to the results folder.
+-   PATH_INSTRUMENT_SAMPLES: Path to the instrument samples folder.
+
+-   FIGURE_WIDTH: Width of the figure.
+-   FIGURE_HEIGHT: Height of the figure.
+-   FIGURE_HEIGHT_PER_PLOT: Height of each individual plot.
+-   HSPACING: Horizontal spacing between subplots.
+-   VSPACING: Vertical spacing between subplots.
+-   Y_AXIS_MARGIN: Y-axis range margin when exporting individual harmonics to PDF.
+
+-   WAVEFORM_ZOOM_PERCENTAGES: Waveform zoom percentage for each instrument.
+-   N_HARMONICS_PER_INSTRUMENT: Number of harmonics to be used in the Fourier analysis for each
+    instrument.
+
+-   NOTE_FREQUENCIES: Note corresponding to each frequency.
+-   AUDIO_DURATION: Duration of exported individual harmonic audio files.
+-   SAMPLE_RATE: Sample rate of exported individual harmonic audio files.
+
+Notes:
+------
+
+Author: Duje Giljanović (giljanovic.duje@gmail.com)
+License: MIT License
+
+If you use this module in your research or any other publication, please acknowledge it by citing
+as follows:
+
+@software{instruments_fourier_analysis,
+    title = {Fourier Analysis of Musical Instruments},
+    author = {Duje Giljanović},
+    year = {2024},
+    url = {github.com/gilja/instruments_fourier_analysis},
+}
+"""
+
 import os
 
 # Path constants
@@ -16,25 +62,28 @@ FIGURE_HEIGHT_PER_PLOT = 400  # height for each individual plot
 HSPACING = 0.08
 VSPACING = 0.2
 
+# Set the y-axis range margin when exporting individual hamornics to PDF
+Y_AXIS_MARGIN = 1.05  # margin for the y-axis range
+
 # Set waveform zoom percentage for each instrument
 WAVEFORM_ZOOM_PERCENTAGES = [
-    0.008,
-    0.0015,
-    0.01,
-    0.005,
-    0.003,
-    0.009,
-    0.009,
-    0.004,
-    0.002,
-    0.003,
-    0.011,
-    0.002,
-    0.007,
-    0.007,
-    0.009,
-    0.003,
-    0.003,
+    0.008,  # cello
+    0.0015,  # clarinet
+    0.01,  # double bass
+    0.005,  # female vocal
+    0.003,  # flute
+    0.009,  # nylon string guitar
+    0.009,  # oboe
+    0.004,  # piano
+    0.002,  # piccolo flute
+    0.003,  # sax alto
+    0.011,  # sax baritone
+    0.002,  # sax soprano
+    0.007,  # sax tenor
+    0.007,  # steel string guitar
+    0.009,  # trombone
+    0.003,  # trumpet
+    0.003,  # violin
 ]
 
 # Set the number of harmonics to be used in the Fourier analysis for each instrument
@@ -57,9 +106,6 @@ N_HARMONICS_PER_INSTRUMENT = [
     15,  # trumpet
     20,  # violin
 ]
-
-# Set the y-axis range margin when exporting individual hamornics to PDF
-Y_AXIS_MARGIN = 1.05  # margin for the y-axis range
 
 # Note corresponding to each frequency
 NOTE_FREQUENCIES = {
@@ -175,5 +221,5 @@ NOTE_FREQUENCIES = {
 }
 
 # set the duration and sample rate for individual harmonic audio files
-AUDIO_DURATION = 1.5  # seconds
+AUDIO_DURATION = 1.0  # seconds
 SAMPLE_RATE = 44100  # Hz
