@@ -52,14 +52,14 @@ pip install PyToneAnalyzer
 
 ## Usage
 
-**Note: Since the package is depending on ipywidgets, it is mandatory to run the code in notebook cells. Running the code in a standard Python file will result in figures and audio not being displayed!
-The code has been tested to run with VSCode with Notebook API and JupyterLab. Jupyter Notebook seems to have some issues with ipywidgets which makes it difficult to set up properly.**
+**Note: Since the package depends on ipywidgets, running the code in notebook cells is mandatory. Running the code in a standard Python file will result in figures and audio not being displayed!
+The code has been tested to run with VSCode with Notebook API and JupyterLab. Jupyter Notebook seems to have some issues with ipywidgets, making it difficult to set up properly.**
 
-The package comes with default dataset and configuration file which makes it plug-and-play for new users.
+The package comes with a default dataset and configuration file making, it plug-and-play for new users.
 
-In the ```examples``` directory you can find the notebook which should help you get familiar with the tool. Bellow you can find some important details.
+In the ```examples``` directory you can find the notebook which should help you get familiar with the tool. Below you can find some important details.
 
-The first step is importing necessary modules: 
+The first step is importing the necessary modules: 
 
 ```python
 import os
@@ -78,7 +78,7 @@ iou.create_directory_structure()
 
 Now you are ready to import data!
 
-> If you are running the tool for the first time, you are not likely to have your custom configuration file. Hence, the tool will use default configuration and data files that are installed together with the source code. 
+> If you are running the tool for the first time, you are not likely to have your custom configuration file. Hence, the tool will use the default configuration and data files that are installed together with the source code. 
 
 ```python
 files = [os.path.join(cfg.PATH_INSTRUMENT_SAMPLES, name) for name in os.listdir(cfg.PATH_INSTRUMENT_SAMPLES)]
@@ -97,7 +97,7 @@ Keep in mind that imported audio files are converted to lowercase and sorted alp
 
 ## Custom configuration file
 
-Once you are ready to do the analysis on your own audio files, you will need to create your own configuration file. To make this easier to you, the template has been provided to you in the ```examples``` directory.
+Once you are ready to analyze your own audio files, you will need to create your own configuration file. To make this easier for you, the template has been provided to you in the ```examples``` directory.
 
 The first thing that you will want to address after downloading the template file is the section with __PATH__ variables
 
@@ -111,7 +111,7 @@ PATH_INSTRUMENT_SAMPLES = os.path.join(PATH_DATA, "instrument_samples")
 
 The __only__ thing to edit here is the __PATH_BASE__ which should point to the project directory. Once this has been set up, other paths are configured automatically. If you set the PATH_BASE variable to point to ~/Desktop, the tool will create directories ~/Desktop/data/instrument_samples and ~/Desktop/results in which it will search input audio files and store results, respectively.
 
->**Important**: Use absolute path for the PATH_BASE variable
+>**Important**: Use absolute path for the PATH_BASE variable!
 
 The next important configuration variables are WAVEFORM_ZOOM_PERCENTAGES, N_HARMONICS_PER_INSTRUMENT and PERIOD_BOUNDS.
 
@@ -152,10 +152,10 @@ You should play around with these percentages until you get the result that you 
 ![Alt text](https://github.com/gilja/instruments_fourier_analysis/blob/main/examples/waveform_cello_c3.png?raw=true "Waveform")
 
 
-The WAVEFORM_ZOOM_PERCENTAGES variable indicates how many harmonics will be used, for each audio file, to reconstruct the original signal. The higher this number is, the better the reconstruction will be. While some instruments have relatively simple harmonic footprint, other do not.
+The WAVEFORM_ZOOM_PERCENTAGES variable indicates how many harmonics will be used, for each audio file, to reconstruct the original signal. The higher this number is, the better the reconstruction will be. While some instruments have a relatively simple harmonic footprint, others do not.
 
-The PERIOD_BOUNDS variable is used to specify the starting and ending points of arbitrary period. One full period can be easily determined by looking at the zoomed-in waveform and finding the two adjacent x-axis values at which the waveform start to repeat. This can be easily done when running the application since one can zoom-in even more on any part of the plot and with determine the precise coordinate of any point on the graph with mouse hover. 
-An example is shown bellow for clarinet playing C5.
+The PERIOD_BOUNDS variable is used to specify the starting and ending points of an arbitrary period. One full period can be easily determined by looking at the zoomed-in waveform and finding the two adjacent x-axis values at which the waveform starts to repeat. This can be easily done when running the application since one can zoom in even more on any part of the plot and determine the precise coordinate of any point on the graph with mouse hover. 
+An example is shown below for clarinet playing C5.
 
 ![Alt text](https://github.com/gilja/instruments_fourier_analysis/blob/main/examples/waveform_clarinet_c5.png?raw=true "One period")
 
@@ -163,7 +163,7 @@ An example is shown bellow for clarinet playing C5.
 
 ### Setting up configuration in code
 
-Once the configuration file had been prepared, it is time to set it up in the code. 
+Once the configuration file has been prepared, it is time to set it up in the code. 
 
 The first step is the same: 
 
@@ -197,7 +197,7 @@ cfg.PERIOD_BOUNDS
 ...
 ```
 
-The final step before adding your own data is setting up directory structure:
+The final step before adding your data is setting up the directory structure:
 
 ```python
 iou.create_directory_structure()
@@ -209,14 +209,14 @@ This will create ```results/analyzed``` and ```data/instrument_samples``` direct
 
 ## Adding custom audio samples
 
-Once the directory structure had been created, you are ready for introducing your own audio samples. 
-It is recommended that the naming convention is followed [instrument_name]-[note]_[16_bit.wav]. Some examples are shown bellow:
+Once the directory structure has been created, you are ready to introduce your audio samples. 
+It is recommended that the naming convention is followed [instrument_name]-[note]_[16_bit.wav]. Some examples are shown below:
 
 - sax-alto-c5_16_bit.wav
 - oboe-c4_16_bit.wav
 - cello-c3_16_bit.wav
 
->**Important**: It is absolutely crucial that audio files are in WAV format with .wav extension.
+>**Important**: It is absolutely crucial that audio files are in WAV format with a .wav extension.
 
 >**MacOS users**: Make sure that there is no .DS_Store in the ```data/instrument_samples``` directory. Any non-WAV file in this directory will trigger the exception that will prevent the execution of the code. 
 
@@ -224,15 +224,7 @@ It is recommended that the naming convention is followed [instrument_name]-[note
 
 # Citing PyToneAnalyzer
 
-If you use PyToneAnalyzer in your research or any other publication, please acknowledge it by citing
-as follows:
-
-@software{PyToneAnalyzer,
-    title = {PyToneAnalyzer: Fourier Analysis of Musical Instruments},
-    author = {Duje Giljanović},
-    year = {2024},
-    url = {github.com/gilja/instruments_fourier_analysis},
-}
+If you are using PyToneAnalyzer in your research, please consider acknowledging it by citing. For details on how to cite, please refer to the following [link](https://github.com/gilja/instruments_fourier_analysis/blob/main/CITATION.txt).
 
 &nbsp;
 

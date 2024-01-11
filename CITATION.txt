@@ -1,6 +1,6 @@
 Citing PyToneAnalyzer
 
-If you use PyToneAnalyzer in your research or any other publication, please acknowledge it by citing
+If you are using PyToneAnalyzer in your research, please consider acknowledging it by citing
 as follows:
 
 @software{PyToneAnalyzer,
