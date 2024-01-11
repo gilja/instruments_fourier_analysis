@@ -224,7 +224,7 @@ It is recommended that the naming convention is followed [instrument_name]-[note
 
 # Citing PyToneAnalyzer
 
-If you are using PyToneAnalyzer in your research, please consider acknowledging it by citing. For details on how to cite, please refer to the following [link](https://github.com/gilja/instruments_fourier_analysis/blob/main/CITATION.txt).
+If you are using PyToneAnalyzer in your research, please acknowledge it by citing. For details on how to cite, please refer to the following [link](https://github.com/gilja/instruments_fourier_analysis/blob/main/CITATION.txt).
 
 &nbsp;
 
