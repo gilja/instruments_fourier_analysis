@@ -15,7 +15,6 @@ GitHub repository of the project: github.com/gilja/instruments_fourier_analysis
 Constants:
 ----------
 
--   PACKAGE_INSTALLATION_PATH: Path to the package installation folder.
 -   PATH_BASE: Base path of the project.
 -   PATH_DATA: Path to the data folder.
 -   PATH_RESULTS: Path to the results folder.
@@ -61,12 +60,10 @@ citing as follows:
 import os
 
 # Path constants
-PACKAGE_INSTALLATION_PATH = os.path.dirname(os.path.abspath(__file__))
-PATH_BASE = os.path.expanduser("~")
-PATH_RESULTS = os.path.join(PATH_BASE, "PyToneAnalyzer_results", "analyzed")
-PATH_INSTRUMENT_SAMPLES = os.path.join(
-    PACKAGE_INSTALLATION_PATH, "PyToneAnalyzer_data", "instrument_samples"
-)
+PATH_BASE = "absolute/path/to/the/project"
+PATH_DATA = os.path.join(PATH_BASE, "data")
+PATH_RESULTS = os.path.join(PATH_BASE, "results", "analysed")
+PATH_INSTRUMENT_SAMPLES = os.path.join(PATH_DATA, "instrument_samples")
 
 # Set figure size for all plots
 FIGURE_WIDTH = 1600  # width for the whole figure
@@ -79,6 +76,10 @@ VSPACING = 0.2
 
 # Set the y-axis range margin when exporting individual harmonics to PDF
 Y_AXIS_MARGIN = 1.05  # margin for the y-axis range
+
+# set the duration and sample rate for individual harmonic audio files
+AUDIO_DURATION = 1.0  # seconds
+SAMPLE_RATE = 44100  # Hz
 
 # Set waveform zoom percentage for each instrument
 WAVEFORM_ZOOM_PERCENTAGES = [
@@ -121,6 +122,27 @@ N_HARMONICS_PER_INSTRUMENT = [
     15,  # trumpet
     20,  # violin
 ]
+
+# one-period bounds for each instrument
+PERIOD_BOUNDS = {
+    "cello": [0.8284, 0.83604],
+    "clarinet": [2.09145, 2.09334],
+    "double_bass": [0.63845, 0.64609],
+    "female_vocal": [0.65874, 0.66064],
+    "flute": [0.78051, 0.78146],
+    "guitar_nylon": [0.441767, 0.44559],
+    "oboe": [0.54717, 0.55097],
+    "piano": [0.75141, 0.75521],
+    "piccolo": [0.69282, 0.69377],
+    "sax_alto": [1.2636, 1.2655],
+    "sax_baritone": [2.1363, 2.1515],
+    "sax_soprano": [1.51283, 1.51472],
+    "sax_tenor": [1.08718, 1.09096],
+    "guitar_metal": [0.59473, 0.59853],
+    "trombone": [0.5417, 0.5455],
+    "trumpet": [1.12869, 1.130605],
+    "violin": [1.28755, 1.28945],
+}
 
 # Note corresponding to each frequency
 NOTE_FREQUENCIES = {
@@ -233,28 +255,4 @@ NOTE_FREQUENCIES = {
     7458.62: "A#8/Bb8",
     7902.13: "B8",
     8000.00: "",  # no note names above B8
-}
-
-# set the duration and sample rate for individual harmonic audio files
-AUDIO_DURATION = 1.0  # seconds
-SAMPLE_RATE = 44100  # Hz
-
-PERIOD_BOUNDS = {
-    "cello": [0.8284, 0.83604],
-    "clarinet": [2.09145, 2.09334],
-    "double_bass": [0.63845, 0.64609],
-    "female_vocal": [0.65874, 0.66064],
-    "flute": [0.78051, 0.78146],
-    "guitar_nylon": [0.441767, 0.44559],
-    "oboe": [0.54717, 0.55097],
-    "piano": [0.75141, 0.75521],
-    "piccolo": [0.69282, 0.69377],
-    "sax_alto": [1.2636, 1.2655],
-    "sax_baritone": [2.1363, 2.1515],
-    "sax_soprano": [1.51283, 1.51472],
-    "sax_tenor": [1.08718, 1.09096],
-    "guitar_metal": [0.59473, 0.59853],
-    "trombone": [0.5417, 0.5455],
-    "trumpet": [1.12869, 1.130605],
-    "violin": [1.28755, 1.28945],
 }
