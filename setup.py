@@ -36,7 +36,7 @@ setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Topic :: Scientific/Engineering :: Sound/Audio :: Analysis",
+        "Topic :: Scientific/Engineering :: Audio",
         "Intended Audience :: Science/Research",
         "Intended Audience :: Education",
     ],
