@@ -57,11 +57,11 @@ Notes:
 Author: Duje Giljanović (giljanovic.duje@gmail.com)
 License: MIT License
 
-If you use this module in your research or any other publication, please acknowledge it by citing
-as follows:
+If you use PyToneAnalyzer in your research or any other publication, please acknowledge it by
+citing as follows:
 
-@software{instruments_fourier_analysis,
-    title = {Fourier Analysis of Musical Instruments},
+@software{PyToneAnalyzer,
+    title = {PyToneAnalyzer: Fourier Analysis of Musical Instruments},
     author = {Duje Giljanović},
     year = {2024},
     url = {github.com/gilja/instruments_fourier_analysis},
@@ -77,9 +77,8 @@ import numpy as np
 from scipy.io import wavfile
 import plotly.graph_objs as go
 import sympy
-from utils import general_functions_and_classes_utils as gfcu
-from settings import period_bounds as pb
-from settings import config as cfg
+from .config_manager import ConfigManager
+from . import general_functions_and_classes_utils as gfcu
 
 
 class _PrepareButtonsMathematicalRepresentation(gfcu.ButtonPanel):
@@ -145,7 +144,8 @@ def print_mathematical_representation_of_signal(
         if not selected_indices:
             return
 
-        sound_periods = [end - start for start, end in pb.PERIOD_BOUNDS.values()]
+        cfg = ConfigManager.get_instance().config
+        sound_periods = [end - start for start, end in cfg.PERIOD_BOUNDS.values()]
         sound_frequencies = [1 / period for period in sound_periods]
 
         for idx in selected_indices:
@@ -325,7 +325,8 @@ def display_reconstructed_and_original_audio(
         if not selected_indices:
             return
 
-        period_bounds = list(pb.PERIOD_BOUNDS.values())
+        cfg = ConfigManager.get_instance().config
+        period_bounds = list(cfg.PERIOD_BOUNDS.values())
         rows = []
         for idx in selected_indices:
             _draw_play_audio_buttons(
@@ -350,7 +351,8 @@ def display_reconstructed_and_original_audio(
         if not selected_indices:
             return
 
-        period_bounds = list(pb.PERIOD_BOUNDS.values())
+        cfg = ConfigManager.get_instance().config
+        period_bounds = list(cfg.PERIOD_BOUNDS.values())
         output_directory = os.path.join(
             cfg.PATH_RESULTS, "reconstructed_one_period_audio/"
         )
@@ -373,9 +375,7 @@ def display_reconstructed_and_original_audio(
                 one_period_audio_data_reconstructed,
             )
 
-        print(
-            f'Exported reconstructed audio to ".{output_directory[len(cfg.PATH_BASE):]}'
-        )
+        print(f"Exported reconstructed audio to {output_directory}")
 
     save_selected_button.on_click(_save_selected_button)
 
@@ -460,6 +460,7 @@ def _find_closest_note_name(frequency):
         -   str: The closest note name.
     """
 
+    cfg = ConfigManager.get_instance().config
     closest_note = min(cfg.NOTE_FREQUENCIES, key=lambda note: abs(note - frequency))
     return cfg.NOTE_FREQUENCIES[closest_note]
 
@@ -498,7 +499,8 @@ def _daw_individual_plotter_function(
     harmonic_order = list(range(1, len(relative_powers) + 1))
 
     # Calculate sound periods and frequencies for the fundamental frequency of each instrument
-    sound_periods = [end - start for start, end in pb.PERIOD_BOUNDS.values()]
+    cfg = ConfigManager.get_instance().config
+    sound_periods = [end - start for start, end in cfg.PERIOD_BOUNDS.values()]
     sound_frequencies = [1 / period for period in sound_periods]
 
     # Get the fundamental frequency for the current instrument
@@ -662,6 +664,7 @@ def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument)
             name += f"{audio_file_names[idx]}_"
         name = name[:-1]  # remove last underscore
 
+        cfg = ConfigManager.get_instance().config
         save_path = os.path.join(cfg.PATH_RESULTS, "power_spectra/")
         pdf_path = os.path.join(save_path, f"waveform_{name}.pdf")
 
@@ -669,9 +672,7 @@ def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument)
             fig, n_rows=2, pdf_path=pdf_path
         )  # n_rows=2 to modify plot size
 
-        print(
-            f"Saved joined plot to .{save_path[len(cfg.PATH_BASE):]}"
-        )  # print relative path
+        print(f"Saved joined plot to {save_path}")
 
     save_joined_button.on_click(_save_joined)
 
@@ -682,6 +683,8 @@ def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument)
         selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
         if not selected_indices:
             return
+
+        cfg = ConfigManager.get_instance().config
 
         for idx in selected_indices:
             fig = _daw_individual_plotter_function(
@@ -700,9 +703,7 @@ def draw_harmonics_power_spectra(files, relative_harmonic_powers_per_instrument)
                 fig, n_rows=2, pdf_path=pdf_path
             )  # n_rows=2 to modify plot size
 
-            print(
-                f"Saved individual plots to .{save_path[len(cfg.PATH_BASE):]}"
-            )  # print relative path
+            print(f"Saved individual plots to {save_path}")
 
     save_individual_button.on_click(_save_individual)
 
@@ -909,6 +910,8 @@ def _get_y_axis_range(grouped_terms, t_min, t_max):
         max_y_value (float): The maximum value of y for all harmonics plus a margin.
     """
 
+    cfg = ConfigManager.get_instance().config
+
     max_y_per_harmonic = []
     for term in grouped_terms:
         _, y_values = _get_numerical_values_from_term(term, t_min, t_max)
@@ -982,6 +985,8 @@ def plot_individual_harmonics(
         if not selected_indices:
             return
 
+        cfg = ConfigManager.get_instance().config
+
         for idx in selected_indices:
             print("Preparing the plot. Please wait...")
 
@@ -1024,9 +1029,7 @@ def plot_individual_harmonics(
                     fig, n_rows=2, pdf_path=pdf_path
                 )  # n_rows=2 to modify plot size
 
-                print(
-                    f"Saved joined plot to .{save_path[len(cfg.PATH_BASE):]}"
-                )  # print relative path
+                print(f"Saved joined plot to {save_path}")
 
     plot_harmonics_button.on_click(_plot_harmonics)
 
@@ -1056,6 +1059,8 @@ def plot_individual_harmonics(
             # max y value for all plots
             max_y_value = _get_y_axis_range(grouped_terms, t_min, t_max)
 
+            cfg = ConfigManager.get_instance().config
+
             for n, term in enumerate(grouped_terms):
                 fig = go.Figure()
                 t_values, y_values = _get_numerical_values_from_term(term, t_min, t_max)
@@ -1082,8 +1087,6 @@ def plot_individual_harmonics(
                     fig, n_rows=2, pdf_path=pdf_path
                 )  # n_rows=2 to modify plot size
 
-                print(
-                    f"Saved individual plots to .{save_path[len(cfg.PATH_BASE):]}"
-                )  # print relative path
+                print(f"Saved individual plots to {save_path}")
 
     save_individual_button.on_click(_save_individual)

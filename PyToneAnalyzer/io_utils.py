@@ -36,11 +36,11 @@ Notes:
 Author: Duje Giljanović (giljanovic.duje@gmail.com)
 License: MIT License
 
-If you use this module in your research or any other publication, please acknowledge it by citing
-as follows:
+If you use PyToneAnalyzer in your research or any other publication, please acknowledge it by
+citing as follows:
 
-@software{instruments_fourier_analysis,
-    title = {Fourier Analysis of Musical Instruments},
+@software{PyToneAnalyzer,
+    title = {PyToneAnalyzer: Fourier Analysis of Musical Instruments},
     author = {Duje Giljanović},
     year = {2024},
     url = {github.com/gilja/instruments_fourier_analysis},
@@ -54,9 +54,9 @@ from IPython.display import Audio, display, clear_output
 from ipywidgets import Layout
 import numpy as np
 from functools import partial
-from settings import period_bounds as pb
-from settings import config as cfg
-from utils import general_functions_and_classes_utils as gfcu
+from .config_manager import ConfigManager
+from . import general_functions_and_classes_utils as gfcu
+import PyToneAnalyzer
 
 
 def load_sound(filename):
@@ -204,12 +204,15 @@ def export_and_store_one_period_audio(files, one_period_signals, sample_rates):
     """
 
     one_period_audios = []
+    cfg = ConfigManager.get_instance().config
     output_directory = os.path.join(cfg.PATH_RESULTS, "original_one_period_audios/")
 
     audio_names = gfcu.get_names(files)
 
+    cfg = ConfigManager.get_instance().config
+
     for idx, (signal, sample_rate, period_bound) in enumerate(
-        zip(one_period_signals, sample_rates, pb.PERIOD_BOUNDS.values())
+        zip(one_period_signals, sample_rates, cfg.PERIOD_BOUNDS.values())
     ):
         name = audio_names[idx]
 
@@ -229,9 +232,7 @@ def export_and_store_one_period_audio(files, one_period_signals, sample_rates):
             one_period_audio_data,
         )
 
-        print(
-            f"Exported audio to .{output_directory[len(cfg.PATH_BASE):]}"
-        )  # print relative path
+        print(f"Exported audio to {output_directory}")
 
     return one_period_audios
 
@@ -268,7 +269,8 @@ def _get_sound_frequency(idx):
     """
 
     # Calculate sound periods and frequencies for the fundamental frequency of each instrument
-    sound_periods = [end - start for start, end in pb.PERIOD_BOUNDS.values()]
+    cfg = ConfigManager.get_instance().config
+    sound_periods = [end - start for start, end in cfg.PERIOD_BOUNDS.values()]
     sound_frequencies = [1 / period for period in sound_periods]
 
     # Get the fundamental frequency for the current instrument
@@ -423,6 +425,8 @@ def save_harmonics_sounds(
         if not selected_indices:
             return
 
+        cfg = ConfigManager.get_instance().config
+
         for idx in selected_indices:
             # get individual harmonics (grouped terms) for the selected instrument
             terms = gfcu.get_individual_terms(
@@ -445,9 +449,7 @@ def save_harmonics_sounds(
                 relative_harmonic_powers, grouped_terms
             )
 
-            output_directory = os.path.join(
-                cfg.PATH_RESULTS, "harmonics_sounds", f"{audio_names[idx]}/"
-            )
+            output_directory = os.path.join(cfg.PATH_RESULTS, "harmonics_sounds/")
 
             for n, term in enumerate(grouped_terms):
                 t = np.linspace(
@@ -474,8 +476,8 @@ def save_harmonics_sounds(
                 )
                 wavfile.write(filename, cfg.SAMPLE_RATE, harmonic_sound)
 
-                # print relative path to the saved file
-                print(f"Saved joined plot to .{output_directory[len(cfg.PATH_BASE):]}")
+                # print path to the saved file
+                print(f"Saved joined plot to {output_directory}")
 
     save_individual_audios_button.on_click(_save_individual_audios)
 
@@ -486,15 +488,22 @@ def create_directory_structure():
 
     The function creates the following directories:
 
-    -   ./data/instrument_samples: stores the instrument samples
-    -   ./results/analysed: stores the results of the analysis
-        *   ./results/analysed/harmonics_function_plots
-        *   ./results/analysed/harmonics_sounds
-        *   ./results/analysed/original_one_period_audios
-        *   ./results/analysed/original_waveforms
-        *   ./results/analysed/power_spectra
-        *   ./results/analysed/reconstructed_one_period_audio
-        *   ./results/analysed/waveform_reconstruction
+    -   ./PyToneAnalyzer_data/instrument_samples: stores the instrument samples
+    -   ./PyToneAnalyzer_results/analyzed: stores the results of the analysis
+        *   ./PyToneAnalyzer_results/analyzed/harmonics_function_plots
+        *   ./PyToneAnalyzer_results/analyzed/harmonics_sounds
+        *   ./PyToneAnalyzer_results/analyzed/original_one_period_audios
+        *   ./PyToneAnalyzer_results/analyzed/original_waveforms
+        *   ./PyToneAnalyzer_results/analyzed/power_spectra
+        *   ./PyToneAnalyzer_results/analyzed/reconstructed_one_period_audio
+        *   ./PyToneAnalyzer_results/analyzed/waveform_reconstruction
+
+    If the custom config file has not been provided, the default one is used.
+    The results will be stored in the PyToneAnalyzer_results in the user's
+    home directory and default data samples will be used. In addition,
+    instrument_samples directory will not be created.
+    For more information on how to create a custom configuration file, or which
+    default data samples are used, refer to the documentation.
 
     Args:
         None
@@ -503,7 +512,18 @@ def create_directory_structure():
         None
     """
 
-    instrument_samples = os.path.join(cfg.PATH_INSTRUMENT_SAMPLES)
+    cfg = ConfigManager.get_instance().config
+    cfg_manager = PyToneAnalyzer.ConfigManager.get_instance()
+
+    if not cfg_manager.is_default_config:
+        instrument_samples = os.path.join(cfg.PATH_INSTRUMENT_SAMPLES)
+        os.makedirs(instrument_samples, exist_ok=True)
+    else:
+        print(
+            "Custom config file not provided. Using default "
+            "instruments. Skipping the creation of instrument_samples directory."
+        )
+
     results = os.path.join(cfg.PATH_RESULTS)
     original_waveforms = os.path.join(results, "original_waveforms")
     original_one_period_audios = os.path.join(results, "original_one_period_audios")
@@ -512,11 +532,17 @@ def create_directory_structure():
     )
     power_spectra = os.path.join(results, "power_spectra")
     harmonics_function_plots = os.path.join(results, "harmonics_function_plots")
+    waveform_reconstruction = os.path.join(results, "waveform_reconstruction")
+    harmonics_sounds = os.path.join(results, "harmonics_sounds")
 
-    os.makedirs(instrument_samples, exist_ok=True)
     os.makedirs(results, exist_ok=True)
     os.makedirs(original_waveforms, exist_ok=True)
     os.makedirs(original_one_period_audios, exist_ok=True)
     os.makedirs(reconstructed_one_period_audios, exist_ok=True)
     os.makedirs(power_spectra, exist_ok=True)
     os.makedirs(harmonics_function_plots, exist_ok=True)
+    os.makedirs(waveform_reconstruction, exist_ok=True)
+    os.makedirs(harmonics_sounds, exist_ok=True)
+
+    print("Directory structure created.")
+    print(f"Results will be stored in: {cfg.PATH_RESULTS}")

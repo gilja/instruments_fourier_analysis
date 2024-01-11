@@ -26,11 +26,11 @@ Notes:
 Author: Duje Giljanović (giljanovic.duje@gmail.com)
 License: MIT License
 
-If you use this module in your research or any other publication, please acknowledge it by citing
-as follows:
+If you use PyToneAnalyzer in your research or any other publication, please acknowledge it by
+citing as follows:
 
-@software{instruments_fourier_analysis,
-    title = {Fourier Analysis of Musical Instruments},
+@software{PyToneAnalyzer,
+    title = {PyToneAnalyzer: Fourier Analysis of Musical Instruments},
     author = {Duje Giljanović},
     year = {2024},
     url = {github.com/gilja/instruments_fourier_analysis},
@@ -41,7 +41,7 @@ import re
 import math
 import ipywidgets as widgets
 import plotly.io as pio
-from settings import config as cfg
+from .config_manager import ConfigManager
 
 
 def prepare_checkbox_grid(names):
@@ -164,6 +164,8 @@ def export_to_pdf(fig, n_rows, pdf_path):
     Returns:
         None
     """
+
+    cfg = ConfigManager.get_instance().config
 
     pio.write_image(
         fig,

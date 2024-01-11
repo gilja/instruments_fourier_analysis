@@ -4,9 +4,18 @@ config
 
 This configuration file contains constants used throughout the project.
 
+The config file is expected to be in the predefined format, otherwise the program
+may not work as expected. In case the user wants to change the default values, it
+is recommended to consult the documentation first! This will be the case for any
+nontrivial usage of the package.
+
+The documentation can be found in the
+GitHub repository of the project: github.com/gilja/instruments_fourier_analysis
+
 Constants:
 ----------
 
+-   PACKAGE_INSTALLATION_PATH: Path to the package installation folder.
 -   PATH_BASE: Base path of the project.
 -   PATH_DATA: Path to the data folder.
 -   PATH_RESULTS: Path to the results folder.
@@ -27,17 +36,22 @@ Constants:
 -   AUDIO_DURATION: Duration of exported individual harmonic audio files.
 -   SAMPLE_RATE: Sample rate of exported individual harmonic audio files.
 
+-   PERIOD_BOUNDS: Period bounds for each instrument used in the Fourier analysis. The bounds are
+    obtained manually by plotting waveform of each audio file and identifying the periods visually.
+    The order of the instruments is the same as in the N_HARMONICS_PER_INSTRUMENT and the
+    WAVEFORM_ZOOM_PERCENTAGES.
+
 Notes:
 ------
 
 Author: Duje Giljanović (giljanovic.duje@gmail.com)
 License: MIT License
 
-If you use this module in your research or any other publication, please acknowledge it by citing
-as follows:
+If you use PyToneAnalyzer in your research or any other publication, please acknowledge it by
+citing as follows:
 
-@software{instruments_fourier_analysis,
-    title = {Fourier Analysis of Musical Instruments},
+@software{PyToneAnalyzer,
+    title = {PyToneAnalyzer: Fourier Analysis of Musical Instruments},
     author = {Duje Giljanović},
     year = {2024},
     url = {github.com/gilja/instruments_fourier_analysis},
@@ -47,11 +61,12 @@ as follows:
 import os
 
 # Path constants
-PATH_BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PATH_DATA = os.path.join(PATH_BASE, "data")
-PATH_RESULTS = os.path.join(PATH_BASE, "results", "analysed")
-PATH_INSTRUMENT_SAMPLES = os.path.join(PATH_DATA, "instrument_samples")
-
+PACKAGE_INSTALLATION_PATH = os.path.dirname(os.path.abspath(__file__))
+PATH_BASE = os.path.expanduser("~")
+PATH_RESULTS = os.path.join(PATH_BASE, "PyToneAnalyzer_results", "analyzed")
+PATH_INSTRUMENT_SAMPLES = os.path.join(
+    PACKAGE_INSTALLATION_PATH, "PyToneAnalyzer_data", "instrument_samples"
+)
 
 # Set figure size for all plots
 FIGURE_WIDTH = 1600  # width for the whole figure
@@ -223,3 +238,23 @@ NOTE_FREQUENCIES = {
 # set the duration and sample rate for individual harmonic audio files
 AUDIO_DURATION = 1.0  # seconds
 SAMPLE_RATE = 44100  # Hz
+
+PERIOD_BOUNDS = {
+    "cello": [0.8284, 0.83604],
+    "clarinet": [2.09145, 2.09334],
+    "double_bass": [0.63845, 0.64609],
+    "female_vocal": [0.65874, 0.66064],
+    "flute": [0.78051, 0.78146],
+    "guitar_nylon": [0.441767, 0.44559],
+    "oboe": [0.54717, 0.55097],
+    "piano": [0.75141, 0.75521],
+    "piccolo": [0.69282, 0.69377],
+    "sax_alto": [1.2636, 1.2655],
+    "sax_baritone": [2.1363, 2.1515],
+    "sax_soprano": [1.51283, 1.51472],
+    "sax_tenor": [1.08718, 1.09096],
+    "guitar_metal": [0.59473, 0.59853],
+    "trombone": [0.5417, 0.5455],
+    "trumpet": [1.12869, 1.130605],
+    "violin": [1.28755, 1.28945],
+}

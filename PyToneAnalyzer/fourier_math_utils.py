@@ -29,11 +29,11 @@ Notes:
 Author: Duje Giljanović (giljanovic.duje@gmail.com)
 License: MIT License
 
-If you use this module in your research or any other publication, please acknowledge it by citing
-as follows:
+If you use PyToneAnalyzer in your research or any other publication, please acknowledge it by
+citing as follows:
 
-@software{instruments_fourier_analysis,
-    title = {Fourier Analysis of Musical Instruments},
+@software{PyToneAnalyzer,
+    title = {PyToneAnalyzer: Fourier Analysis of Musical Instruments},
     author = {Duje Giljanović},
     year = {2024},
     url = {github.com/gilja/instruments_fourier_analysis},
@@ -41,7 +41,7 @@ as follows:
 """
 
 import numpy as np
-from settings import period_bounds as pb
+from .config_manager import ConfigManager
 
 
 def extract_periods_and_data_rates(sounds):
@@ -65,9 +65,10 @@ def extract_periods_and_data_rates(sounds):
     """
 
     periods, data_rates = [], []
+    cfg = ConfigManager.get_instance().config
 
     for (data, data_rate), (period_start, period_end) in zip(
-        sounds, pb.PERIOD_BOUNDS.values()
+        sounds, cfg.PERIOD_BOUNDS.values()
     ):
         sample_start = int(period_start * data_rate)
         sample_end = int(period_end * data_rate)
@@ -233,8 +234,7 @@ def get_mathematical_representation_of_signal(fourier_coefficients, T):
         if n == 0:
             representation += f"{a/2:.3f}\n"
         else:
-            representation += f" + {a:.3f}*cos(2*pi*{n}*t/{T:.3f}) \
-                + {b:.3f}*sin(2*pi*{n}*t/{T:.3f})\n"
+            representation += f" + {a:.3f}*cos(2*pi*{n}*t/{T:.3f}) + {b:.3f}*sin(2*pi*{n}*t/{T:.3f})\n"
 
     # Polishing the output
     representation = representation.replace(" + -", " - ")

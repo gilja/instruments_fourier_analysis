@@ -1,0 +1,20 @@
+Metadata-Version: 2.1
+Name: PyToneAnalyzer
+Version: 0.1.0
+Summary: A Python package for analyzing musical instruments through Fourier analysis.
+Home-page: https://github.com/gilja/instruments_fourier_analysis
+Author: Duje Giljanović
+Author-email: giljanovic.duje@gmail.com
+License: LICENSE.txt
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENCE.txt
+Requires-Dist: scipy>=1.11.4
+Requires-Dist: ipywidgets>=8.1.1
+Requires-Dist: plotly>=5.18.0
+Requires-Dist: sympy>=1.12
+Requires-Dist: kaleido>=0.2.1
+Requires-Dist: nbformat>=5.9.2

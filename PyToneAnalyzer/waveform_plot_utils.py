@@ -41,11 +41,11 @@ Notes:
 Author: Duje Giljanović (giljanovic.duje@gmail.com)
 License: MIT License
 
-If you use this module in your research or any other publication, please acknowledge it by citing
-as follows:
+If you use PyToneAnalyzer in your research or any other publication, please acknowledge it by
+citing as follows:
 
-@software{instruments_fourier_analysis,
-    title = {Fourier Analysis of Musical Instruments},
+@software{PyToneAnalyzer,
+    title = {PyToneAnalyzer: Fourier Analysis of Musical Instruments},
     author = {Duje Giljanović},
     year = {2024},
     url = {github.com/gilja/instruments_fourier_analysis},
@@ -59,10 +59,9 @@ from IPython.display import display, clear_output
 from plotly.subplots import make_subplots
 import numpy as np
 import plotly.graph_objs as go
-from settings import period_bounds as pb
-from settings import config as cfg
-from utils import general_functions_and_classes_utils as gfcu
-from utils import fourier_math_utils as fmu
+from .config_manager import ConfigManager
+from . import general_functions_and_classes_utils as gfcu
+from . import fourier_math_utils as fmu
 
 
 class _PrepareButtonsWaveformsPlot(gfcu.ButtonPanel):
@@ -117,6 +116,8 @@ def _prepare_subplots(plot_names, selected_indices, n_rows, name=None):
         Vertical spacing between subplots has to be adjusted based on the number of
         rows. Otherwise, the spacing will diverge as the number of rows increases.
     """
+
+    cfg = ConfigManager.get_instance().config
 
     if not name:  # scenario: all plots together
         subplot_titles = [
@@ -220,6 +221,7 @@ def _draw_zoomed_waveforms(fig, sounds, row, idx, mark_one_period=False):
         None
     """
 
+    cfg = ConfigManager.get_instance().config
     wav, rate = sounds[idx]
     zoom_percentage = cfg.WAVEFORM_ZOOM_PERCENTAGES[idx]
 
@@ -248,7 +250,7 @@ def _draw_zoomed_waveforms(fig, sounds, row, idx, mark_one_period=False):
 
     # adding vertical lines for marking the start and end of the period
     if mark_one_period is True:
-        bounds_list = list(pb.PERIOD_BOUNDS.values())
+        bounds_list = list(cfg.PERIOD_BOUNDS.values())
         x1, x2 = bounds_list[idx]  # bounds are in seconds, converted to ms below
 
         plot_x_min = time_in_milliseconds[start_index]
@@ -308,6 +310,8 @@ def _update_plot(fig, title, n_rows, legend=False):
     Returns:
         None
     """
+
+    cfg = ConfigManager.get_instance().config
 
     fig.update_layout(
         height=cfg.FIGURE_HEIGHT_PER_PLOT * n_rows,
@@ -430,6 +434,7 @@ def plot_waveform(sounds, files, mark_one_period=False):
         _update_plot(fig, title="Waveform Plots", n_rows=len(selected_indices))
 
         # Save the plot to PDF
+        cfg = ConfigManager.get_instance().config
         save_path = os.path.join(cfg.PATH_RESULTS, "original_waveforms/")
         pdf_path = os.path.join(save_path, "waveforms_all.pdf")
         gfcu.export_to_pdf(
@@ -438,9 +443,7 @@ def plot_waveform(sounds, files, mark_one_period=False):
             pdf_path=pdf_path,
         )
 
-        print(
-            f"Saved joined plot to .{save_path[len(cfg.PATH_BASE):]}"
-        )  # print relative path
+        print(f"Saved joined plot to {save_path}")
 
     save_all_button.on_click(_save_together_plots)
 
@@ -451,6 +454,8 @@ def plot_waveform(sounds, files, mark_one_period=False):
         selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
         if not selected_indices:
             return
+
+        cfg = ConfigManager.get_instance().config
 
         for idx in selected_indices:
             fig = _prepare_subplots(
@@ -478,9 +483,7 @@ def plot_waveform(sounds, files, mark_one_period=False):
                 pdf_path=pdf_path,
             )  # 2 just to modify the plot size
 
-            print(
-                f"Saved joined plot to .{save_path[len(cfg.PATH_BASE):]}"
-            )  # print relative path
+            print(f"Saved joined plot to {save_path}")
 
     save_individual_button.on_click(_save_individual_plots)
 
@@ -654,6 +657,7 @@ def draw_waveform_reconstruction_timeline(files, one_period_signals, sample_rate
 
         # Get the one-period audio signal for the selected instrument
         one_period_signal = one_period_signals[idx]
+        cfg = ConfigManager.get_instance().config
         n_harmonics = cfg.N_HARMONICS_PER_INSTRUMENT[idx]
 
         # Calculate the number of rows needed for the subplot
@@ -683,6 +687,8 @@ def draw_waveform_reconstruction_timeline(files, one_period_signals, sample_rate
         selected_indices = [i for i, cb in enumerate(checkboxes) if cb.value]
         if not selected_indices:
             return
+
+        cfg = ConfigManager.get_instance().config
 
         for idx in selected_indices:
             # Get the one-period audio signal for the selected instrument
@@ -717,8 +723,6 @@ def draw_waveform_reconstruction_timeline(files, one_period_signals, sample_rate
                     pdf_path=pdf_path + name + f"_step_{n+1}.pdf",
                 )  # n_rows=2 only here to modify plot size
 
-                print(
-                    f"Saved joined plot to .{pdf_path[len(cfg.PATH_BASE):]}"
-                )  # print relative path
+                print(f"Saved joined plot to {pdf_path}")
 
     save_individual_plots_button.on_click(_save_individual_plots)

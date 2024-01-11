@@ -1,0 +1,11 @@
+Citing PyToneAnalyzer
+
+If you use PyToneAnalyzer in your research or any other publication, please acknowledge it by citing
+as follows:
+
+@software{PyToneAnalyzer,
+    title = {PyToneAnalyzer: Fourier Analysis of Musical Instruments},
+    author = {Duje Giljanović},
+    year = {2024},
+    url = {github.com/gilja/instruments_fourier_analysis},
+}
