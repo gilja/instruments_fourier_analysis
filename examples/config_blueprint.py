@@ -27,18 +27,18 @@ Constants:
 -   VSPACING: Vertical spacing between subplots.
 -   Y_AXIS_MARGIN: Y-axis range margin when exporting individual harmonics to PDF.
 
--   WAVEFORM_ZOOM_PERCENTAGES: Waveform zoom percentage for each instrument.
--   N_HARMONICS_PER_INSTRUMENT: Number of harmonics to be used in the Fourier analysis for each
-    instrument.
-
--   NOTE_FREQUENCIES: Note corresponding to each frequency.
 -   AUDIO_DURATION: Duration of exported individual harmonic audio files.
 -   SAMPLE_RATE: Sample rate of exported individual harmonic audio files.
 
+-   WAVEFORM_ZOOM_PERCENTAGES: Waveform zoom percentage for each instrument.
+-   N_HARMONICS_PER_INSTRUMENT: Number of harmonics to be used in the Fourier analysis for each
+    instrument.
 -   PERIOD_BOUNDS: Period bounds for each instrument used in the Fourier analysis. The bounds are
     obtained manually by plotting waveform of each audio file and identifying the periods visually.
     The order of the instruments is the same as in the N_HARMONICS_PER_INSTRUMENT and the
     WAVEFORM_ZOOM_PERCENTAGES.
+
+-   NOTE_FREQUENCIES: Note corresponding to each frequency.
 
 Notes:
 ------
